@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     container_name: dashboard-backend
     ports:
-      - "8080:8080"
+      - "8000:8000"
     environment:
-      PORT: 8080
+      PORT: 8000
     restart: unless-stopped
 
   frontend:
@@ -16,9 +16,9 @@ services:
       dockerfile: Dockerfile
     container_name: dashboard-frontend
     ports:
-      - "3000:3000"
+      - "4242:4242"
     environment:
-      NEXT_PUBLIC_API_URL: http://backend:8080
+      NEXT_PUBLIC_API_URL: http://backend:8000
     depends_on:
       - backend
     restart: unless-stopped
