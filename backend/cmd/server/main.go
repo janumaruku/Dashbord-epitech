@@ -3,16 +3,18 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/janumaruku/Dashbord-epitech/backend/config"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	if godotenv.Load(".env") != nil {
+		log.Printf("No .env file found")
 	}
+
+	var port = config.MustGetenv("PORT")
 
 	r := gin.Default()
 
