@@ -2,7 +2,17 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### Environment Variables
+
+Copy the example env file before running the app:
+
+```bash
+cp .env.local.example .env.local
+```
+
+- `NEXT_PUBLIC_API_URL`: the backend API's base URL. Defaults to `http://localhost:8080`, which matches the backend's port when it's running via Docker Compose (`docker compose up`) or directly on your host (`go run ./cmd/server`). Only change this if you're pointing at a backend running somewhere else.
+
+Then run the development server:
 
 ```bash
 npm run dev
