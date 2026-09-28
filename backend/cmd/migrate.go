@@ -16,7 +16,16 @@ var migrateUpCommand = &cobra.Command{
 	},
 }
 
+var migrateDownCommand = &cobra.Command{
+	Use:   "down",
+	Short: "Roll back the last migration",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.Println("migrate down: not implemented yet")
+		return nil
+	},
+}
+
 func init() {
-	migrateCommand.AddCommand(migrateUpCommand)
+	migrateCommand.AddCommand(migrateUpCommand, migrateDownCommand)
 	rootCommand.AddCommand(migrateCommand)
 }
