@@ -1,13 +1,40 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: dashboard-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dashboard}
+      MYSQL_USER: ${MYSQL_USER:-dashboard}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dashboard}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: dashboard-backend
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
-      PORT: 8000
+      PORT: 8080
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-dashboard}
+      MYSQL_USER: ${MYSQL_USER:-dashboard}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dashboard}
+    depends_on:
+      mysql:
+        condition: service_healthy
     restart: unless-stopped
 
   frontend:
@@ -16,9 +43,12 @@ services:
       dockerfile: Dockerfile
     container_name: dashboard-frontend
     ports:
-      - "4242:4242"
+      - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://backend:8000
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  mysql_data:
