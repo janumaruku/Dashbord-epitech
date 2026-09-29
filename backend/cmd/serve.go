@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/janumaruku/Dashbord-epitech/backend/config"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/handlers"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var serveCommand = &cobra.Command{
 
 		r := gin.Default()
 
-		r.GET("/about.json", AboutJSON)
+		handlers.RegisterRoutes(r)
 
 		if err := r.Run(":" + port); err != nil {
 			log.Fatal(err)
@@ -26,12 +26,6 @@ var serveCommand = &cobra.Command{
 
 		return nil
 	},
-}
-
-func AboutJSON(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"ans": "OK",
-	})
 }
 
 func init() {

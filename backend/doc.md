@@ -631,15 +631,13 @@ dashboard/
 │   └── next.config.js
 │
 ├── backend/                           # Go application
-│   ├── cmd/
-│   │   └── server/
-│   │       └── main.go               # Entry point — calls cli.Execute()
+│   ├── main.go                       # Entry point — calls cmd.Execute()
+│   ├── cmd/                          # Cobra commands
+│   │   ├── root.go                   # Root command, loads .env in PersistentPreRunE
+│   │   ├── serve.go                  # `serve` — starts the Gin HTTP server
+│   │   ├── migrate.go                # `migrate up`/`migrate down` — runs Goose migrations
+│   │   └── seed.go                   # `seed` — seeds services/widgets data
 │   ├── internal/
-│   │   ├── cli/                      # Cobra commands
-│   │   │   ├── root.go               # Root command
-│   │   │   ├── serve.go              # `serve` — starts the Gin HTTP server
-│   │   │   ├── migrate.go            # `migrate` — runs Goose migrations (up/down)
-│   │   │   └── seed.go               # `seed` — seeds services/widgets data
 │   │   ├── handlers/                 # HTTP handlers
 │   │   │   ├── auth.go
 │   │   │   ├── services.go
@@ -666,19 +664,23 @@ dashboard/
 │   │       ├── weather.go            # OpenWeatherMap
 │   │       ├── github.go             # GitHub API
 │   │       └── rss.go                # RSS parser
-│   ├── migrations/                   # Goose SQL migrations
-│   │   ├── 00001_create_users.sql
-│   │   ├── 00002_create_services.sql
-│   │   └── 00003_create_widgets.sql
+│   ├── migrations/                   # Goose SQL migrations (timestamp-prefixed, per `goose create`)
+│   │   ├── <timestamp>_create_users_table.sql
+│   │   ├── <timestamp>_create_services_table.sql
+│   │   ├── <timestamp>_create_user_services_table.sql
+│   │   ├── <timestamp>_create_widgets_table.sql
+│   │   ├── <timestamp>_create_widget_params_table.sql
+│   │   ├── <timestamp>_create_widget_instances_table.sql
+│   │   └── <timestamp>_create_widget_data_table.sql
 │   ├── config/
 │   │   └── config.go                 # Load .env
 │   ├── go.mod
 │   ├── go.sum
-│   └── .env
+│   ├── .env
+│   └── .env.example
 │
 ├── docker-compose.yml
 ├── .gitignore
-├── .env.example
 ├── README.md                         # Installation & usage
 ├── DEVELOPMENT_SPECIFICATION.md      # This file
 ├── API_SPECIFICATION.md              # Separate: API endpoints
