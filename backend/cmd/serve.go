@@ -6,7 +6,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/janumaruku/Dashbord-epitech/backend/config"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -15,10 +14,6 @@ var serveCommand = &cobra.Command{
 	Short: "Serve a HTTP server",
 	Long:  `Serve a HTTP server`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if godotenv.Load(".env") != nil {
-			log.Printf("No .env file found")
-		}
-
 		var port = config.MustGetenv("PORT")
 
 		r := gin.Default()
