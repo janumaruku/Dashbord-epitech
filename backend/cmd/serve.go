@@ -16,9 +16,13 @@ var serveCommand = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var port = config.MustGetenv("PORT")
 
-		r := gin.Default()
+		app, err := handlers.NewApp()
+		if err != nil {
+			return err
+		}
 
-		handlers.RegisterRoutes(r)
+		r := gin.Default()
+		handlers.RegisterRoutes(r, app)
 
 		if err := r.Run(":" + port); err != nil {
 			log.Fatal(err)
