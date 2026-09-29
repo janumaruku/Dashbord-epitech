@@ -14,16 +14,7 @@ import (
 const migrationsDir = "migrations"
 
 func openMigrationsDB() (*sql.DB, error) {
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		config.MustGetenv("MYSQL_USER"),
-		config.MustGetenv("MYSQL_PASSWORD"),
-		config.MustGetenv("MYSQL_HOST"),
-		config.MustGetenv("MYSQL_PORT"),
-		config.MustGetenv("MYSQL_DATABASE"),
-	)
-
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("mysql", config.MySQLDSN())
 	if err != nil {
 		return nil, fmt.Errorf("opening database connection: %w", err)
 	}
