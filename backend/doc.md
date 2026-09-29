@@ -569,11 +569,7 @@ When a user opens the dashboard, the frontend calls `GET /dashboard/widgets`. Fo
 | **Frontend Framework** | Next.js | 14.x | SSR optimization, file-based routing, built-in API routes |
 | **Frontend Runtime** | React | 18.x | Component-based, widget architecture, large ecosystem |
 | **Frontend Language** | TypeScript | 5.x | Type safety, better IDE support, fewer runtime errors |
-| **Frontend State** | React Query | 3.x | Server state management, auto caching, deduplication |
-| **Frontend State** | Context API | Native | User auth, global app state |
-| **Frontend Styling** | SCSS | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
-| **Frontend Drag-Drop** | react-grid-layout | 1.x | Battle-tested, matches dashboard use case |
-| **Frontend HTTP** | Axios | 1.x | Promise-based, interceptors, clean API |
+| **Frontend Styling** | Tailwind | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
 | **Backend Framework** | Gin Web Framework | 1.25+ | Fast, minimal, clean routing, middleware support |
 | **Backend Runtime/Language** | Go | 1.21+ | Goroutines for concurrency, compiled performance, single binary |
 | **Backend CLI** | Cobra | 1.8+ | Structures the binary as subcommands (`serve`, `migrate`, `seed`) instead of ad-hoc flags |
@@ -631,15 +627,13 @@ dashboard/
 │   └── next.config.js
 │
 ├── backend/                           # Go application
-│   ├── cmd/
-│   │   └── server/
-│   │       └── main.go               # Entry point — calls cli.Execute()
+│   ├── main.go                       # Entry point — calls cmd.Execute()
+│   ├── cmd/                          # Cobra commands
+│   │   ├── root.go                   # Root command, loads .env in PersistentPreRunE
+│   │   ├── serve.go                  # `serve` — starts the Gin HTTP server
+│   │   ├── migrate.go                # `migrate up`/`migrate down` — runs Goose migrations
+│   │   └── seed.go                   # `seed` — seeds services/widgets data
 │   ├── internal/
-│   │   ├── cli/                      # Cobra commands
-│   │   │   ├── root.go               # Root command
-│   │   │   ├── serve.go              # `serve` — starts the Gin HTTP server
-│   │   │   ├── migrate.go            # `migrate` — runs Goose migrations (up/down)
-│   │   │   └── seed.go               # `seed` — seeds services/widgets data
 │   │   ├── handlers/                 # HTTP handlers
 │   │   │   ├── auth.go
 │   │   │   ├── services.go
@@ -666,19 +660,23 @@ dashboard/
 │   │       ├── weather.go            # OpenWeatherMap
 │   │       ├── github.go             # GitHub API
 │   │       └── rss.go                # RSS parser
-│   ├── migrations/                   # Goose SQL migrations
-│   │   ├── 00001_create_users.sql
-│   │   ├── 00002_create_services.sql
-│   │   └── 00003_create_widgets.sql
+│   ├── migrations/                   # Goose SQL migrations (timestamp-prefixed, per `goose create`)
+│   │   ├── <timestamp>_create_users_table.sql
+│   │   ├── <timestamp>_create_services_table.sql
+│   │   ├── <timestamp>_create_user_services_table.sql
+│   │   ├── <timestamp>_create_widgets_table.sql
+│   │   ├── <timestamp>_create_widget_params_table.sql
+│   │   ├── <timestamp>_create_widget_instances_table.sql
+│   │   └── <timestamp>_create_widget_data_table.sql
 │   ├── config/
 │   │   └── config.go                 # Load .env
 │   ├── go.mod
 │   ├── go.sum
-│   └── .env
+│   ├── .env
+│   └── .env.example
 │
 ├── docker-compose.yml
 ├── .gitignore
-├── .env.example
 ├── README.md                         # Installation & usage
 ├── DEVELOPMENT_SPECIFICATION.md      # This file
 ├── API_SPECIFICATION.md              # Separate: API endpoints
