@@ -702,7 +702,7 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
 | username | VARCHAR(50) | Login/display name, unique, 3-50 chars, `[a-zA-Z0-9_]` | No |
 | email | VARCHAR(255) | Email address, unique, RFC 5322 format | No |
 | password_hash | VARCHAR(255) | bcrypt hash (10+ rounds), never returned in output | No |
@@ -713,7 +713,7 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
 | name | VARCHAR | Service key, unique (e.g. `weather`) | No |
 | description | TEXT | Human-readable description | No |
 | requires_auth | BOOLEAN | Whether the service needs OAuth | No |
@@ -724,9 +724,9 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
-| user_id | INTEGER (FK → USERS) | Subscribing user | No |
-| service_id | INTEGER (FK → SERVICES) | Subscribed service | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
+| user_id | CHAR(36) (FK → USERS) | Subscribing user | No |
+| service_id | CHAR(36) (FK → SERVICES) | Subscribed service | No |
 | credentials | VARBINARY(512) | Encrypted (AES-256) credentials for non-OAuth services | Yes |
 | oauth_token | VARBINARY(512) | Encrypted (AES-256) OAuth access token | Yes |
 | oauth_refresh_token | VARBINARY(512) | Encrypted (AES-256) OAuth refresh token | Yes |
@@ -736,8 +736,8 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
-| service_id | INTEGER (FK → SERVICES) | Owning service | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
+| service_id | CHAR(36) (FK → SERVICES) | Owning service | No |
 | name | VARCHAR | Widget type key (e.g. `city_temperature`) | No |
 | description | TEXT | Human-readable description | No |
 | created_at | TIMESTAMP | Record creation date | No |
@@ -746,8 +746,8 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
-| widget_id | INTEGER (FK → WIDGETS) | Owning widget | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
+| widget_id | CHAR(36) (FK → WIDGETS) | Owning widget | No |
 | name | VARCHAR | Parameter name (e.g. `city`) | No |
 | type | VARCHAR | Parameter data type (string, integer, enum...) | No |
 | description | TEXT | Human-readable description | No |
@@ -756,9 +756,9 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
-| user_id | INTEGER (FK → USERS) | Owning user | No |
-| widget_id | INTEGER (FK → WIDGETS) | Widget type this instance is based on | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
+| user_id | CHAR(36) (FK → USERS) | Owning user | No |
+| widget_id | CHAR(36) (FK → WIDGETS) | Widget type this instance is based on | No |
 | config | JSON | Parameter values, must match the widget's WIDGET_PARAMS | No |
 | refresh_rate | INTEGER | Refresh interval in seconds, 5 ≤ value ≤ 3600 | No |
 | position | JSON | Grid position/size: `{x≥0, y≥0, w>0, h>0}` | No |
@@ -769,8 +769,8 @@ All attributes across all entities, their type, meaning, and nullability. Entiti
 
 | Attribute | Type | Description | Nullable |
 |---|---|---|---|
-| id | INTEGER (PK) | Unique identifier | No |
-| widget_instance_id | INTEGER (FK → WIDGET_INSTANCES) | Owning widget instance | No |
+| id | CHAR(36) (PK, UUID) | Unique identifier | No |
+| widget_instance_id | CHAR(36) (FK → WIDGET_INSTANCES) | Owning widget instance | No |
 | data | JSON | Cached response payload, no fixed schema | Yes |
 | fetched_at | TIMESTAMP | Time the data was fetched | No |
 | expires_at | TIMESTAMP | Cache expiry = `fetched_at + refresh_rate` | Yes |
@@ -804,7 +804,7 @@ erDiagram
    WIDGET_INSTANCES ||--o{ WIDGET_DATA : "caches"
 
    USERS {
-      int id PK
+      string id PK
       string username UK
       string email UK
       string password_hash
@@ -812,40 +812,41 @@ erDiagram
       timestamp updated_at
    }
    SERVICES {
-      int id PK
+      string id PK
       string name UK
       string description
       boolean requires_auth
       string oauth_provider
       timestamp created_at
+      timestamp updated_at
    }
    USER_SERVICES {
-      int id PK
-      int user_id FK
-      int service_id FK
+      string id PK
+      string user_id FK
+      string service_id FK
       binary credentials "Encrypted"
       binary oauth_token "Encrypted"
       binary oauth_refresh_token "Encrypted"
       timestamp created_at
    }
    WIDGETS {
-      int id PK
-      int service_id FK
+      string id PK
+      string service_id FK
       string name
       string description
       timestamp created_at
    }
    WIDGET_PARAMS {
-      int id PK
-      int widget_id FK
+      string id PK
+      string widget_id FK
       string name
       string type
       string description
    }
    WIDGET_INSTANCES {
-      int id PK
-      int user_id FK
-      int widget_id FK
+      string id PK
+      string user_id FK
+      string widget_id FK
       json config
       int refresh_rate "5-3600 seconds"
       json position
@@ -853,8 +854,8 @@ erDiagram
       timestamp updated_at
    }
    WIDGET_DATA {
-      int id PK
-      int widget_instance_id FK
+      string id PK
+      string widget_instance_id FK
       json data
       timestamp fetched_at
       timestamp expires_at
@@ -870,7 +871,7 @@ USERS(id, username, email, password_hash, created_at, updated_at)
   PK: id
   UK: username, email
 
-SERVICES(id, name, description, requires_auth, oauth_provider, created_at)
+SERVICES(id, name, description, requires_auth, oauth_provider, created_at, updated_at)
   PK: id
   UK: name
 
