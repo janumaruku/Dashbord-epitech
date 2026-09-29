@@ -569,11 +569,7 @@ When a user opens the dashboard, the frontend calls `GET /dashboard/widgets`. Fo
 | **Frontend Framework** | Next.js | 14.x | SSR optimization, file-based routing, built-in API routes |
 | **Frontend Runtime** | React | 18.x | Component-based, widget architecture, large ecosystem |
 | **Frontend Language** | TypeScript | 5.x | Type safety, better IDE support, fewer runtime errors |
-| **Frontend State** | React Query | 3.x | Server state management, auto caching, deduplication |
-| **Frontend State** | Context API | Native | User auth, global app state |
-| **Frontend Styling** | SCSS | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
-| **Frontend Drag-Drop** | react-grid-layout | 1.x | Battle-tested, matches dashboard use case |
-| **Frontend HTTP** | Axios | 1.x | Promise-based, interceptors, clean API |
+| **Frontend Styling** | Tailwind | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
 | **Backend Framework** | Gin Web Framework | 1.25+ | Fast, minimal, clean routing, middleware support |
 | **Backend Runtime/Language** | Go | 1.21+ | Goroutines for concurrency, compiled performance, single binary |
 | **Backend CLI** | Cobra | 1.8+ | Structures the binary as subcommands (`serve`, `migrate`, `seed`) instead of ad-hoc flags |

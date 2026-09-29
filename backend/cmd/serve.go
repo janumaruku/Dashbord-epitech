@@ -12,7 +12,6 @@ import (
 var serveCommand = &cobra.Command{
 	Use:   "serve",
 	Short: "Serve a HTTP server",
-	Long:  `Serve a HTTP server`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var port = config.MustGetenv("PORT")
 
