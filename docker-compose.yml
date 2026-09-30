@@ -7,8 +7,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-dashboard}
       MYSQL_USER: ${MYSQL_USER:-dashboard}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-dashboard}
-    ports:
-      - "3306:3306"
+    # ports:
+    #   - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
