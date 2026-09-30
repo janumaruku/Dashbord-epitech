@@ -1,8 +1,10 @@
+import Link from "next/link";
+
 export default function RegisterForm() {
     return (
-        <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-lg">
+        <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-lg">
             <h1 className="mb-8 text-center text-3xl font-bold tracking-wide">
-                REGISTER
+                Sign up
             </h1>
 
             <form className="flex flex-col gap-5">
@@ -13,7 +15,7 @@ export default function RegisterForm() {
                     <input
                         id="firstName"
                         type="text"
-                        className="rounded-lg border border-zinc-700 bg-black px-4 py-3 outline-none focus:border-zinc-500"
+                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
 
@@ -24,7 +26,7 @@ export default function RegisterForm() {
                     <input
                         id="lastName"
                         type="text"
-                        className="rounded-lg border border-zinc-700 bg-black px-4 py-3 outline-none focus:border-zinc-500"
+                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
 
@@ -35,7 +37,7 @@ export default function RegisterForm() {
                     <input
                         id="email"
                         type="email"
-                        className="rounded-lg border border-zinc-700 bg-black px-4 py-3 outline-none focus:border-zinc-500"
+                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
 
@@ -46,7 +48,7 @@ export default function RegisterForm() {
                     <input
                         id="password"
                         type="password"
-                        className="rounded-lg border border-zinc-700 bg-black px-4 py-3 outline-none focus:border-zinc-500"
+                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
                 <div className="flex flex-col gap-2">
@@ -57,7 +59,7 @@ export default function RegisterForm() {
                     <input
                         id="confirmPassword"
                         type="password"
-                        className="rounded-lg border border-zinc-700 bg-black px-4 py-3 outline-none focus:border-zinc-500"
+                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
                 <button
@@ -66,6 +68,15 @@ export default function RegisterForm() {
                     >
                     Create account
                 </button>
+                <p className="text-center text-sm text-zinc-400">
+                    Already have an account?{" "}
+                    <Link
+                        href="/login"
+                        className="font-medium text-white hover:underline"
+                    >
+                        Sign in
+                    </Link>
+                </p>
             </form>
         </div>
     )
