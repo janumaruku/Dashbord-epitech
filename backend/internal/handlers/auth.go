@@ -19,7 +19,8 @@ const (
 	msgInvalidPassword    = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
 	msgUsernameTaken      = "Username already taken"
 	msgEmailTaken         = "Email already registered"
-	msgInvalidCredentials = "Invalid email or password"
+	msgInvalidCredentials  = "Invalid email or password"
+	msgInvalidRefreshToken = "Invalid or expired refresh token"
 )
 
 func (app *App) issueTokensAndRespond(c *gin.Context, status int, user *models.User) {
@@ -159,4 +160,60 @@ func (app *App) Login(c *gin.Context) {
 	}
 
 	app.issueTokensAndRespond(c, http.StatusOK, user)
+}
+
+type refreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// Refresh implements T010: exchange a valid, unexpired refresh token for a
+// new access token, rotating the refresh token in the process.
+func (app *App) Refresh(c *gin.Context) {
+	var req refreshRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidRequestBody})
+		return
+	}
+
+	hash := auth.HashRefreshToken(req.RefreshToken)
+
+	rt, err := models.FindRefreshTokenByHash(app.DB, hash)
+	if err != nil {
+		if errors.Is(err, models.ErrRefreshTokenNotFound) {
+			c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
+			return
+		}
+
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	if time.Now().After(rt.ExpiresAt) {
+		_ = models.DeleteRefreshToken(app.DB, rt.ID) // best-effort cleanup
+
+		c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
+		return
+	}
+
+	token, err := auth.GenerateToken(rt.UserID)
+	if err != nil {
+		c.Error(&middleware.ServerError{Err: err})
+		return
+	}
+
+	newRefreshToken, err := app.issueRefreshToken(rt.UserID)
+	if err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	if err := models.DeleteRefreshToken(app.DB, rt.ID); err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token":         token,
+		"refresh_token": newRefreshToken,
+	})
 }
