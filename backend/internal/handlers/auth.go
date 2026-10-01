@@ -1,0 +1,101 @@
+package handlers
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/auth"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
+)
+
+const (
+	msgInvalidRequestBody = "Invalid request body"
+	msgInvalidUsername    = "Username must be 3-50 alphanumeric characters or underscores"
+	msgInvalidEmail       = "Invalid email format"
+	msgInvalidPassword    = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
+	msgUsernameTaken      = "Username already taken"
+	msgEmailTaken         = "Email already registered"
+)
+
+type registerRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func (app *App) Register(c *gin.Context) {
+	var req registerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidRequestBody})
+		return
+	}
+
+	if !validUsername(req.Username) {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidUsername})
+		return
+	}
+
+	if !validEmail(req.Email) {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidEmail})
+		return
+	}
+
+	if !validPassword(req.Password) {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidPassword})
+		return
+	}
+
+	usernameTaken, err := models.UsernameExists(app.DB, req.Username)
+	if err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+	if usernameTaken {
+		c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgUsernameTaken})
+		return
+	}
+
+	emailTaken, err := models.EmailExists(app.DB, req.Email)
+	if err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+	if emailTaken {
+		c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgEmailTaken})
+		return
+	}
+
+	passwordHash, err := auth.HashPassword(req.Password)
+	if err != nil {
+		c.Error(&middleware.ServerError{Err: err})
+		return
+	}
+
+	user := models.User{
+		Username:     req.Username,
+		Email:        req.Email,
+		PasswordHash: passwordHash,
+	}
+
+	if err := models.CreateUser(app.DB, &user); err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		c.Error(&middleware.ServerError{Err: err})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
+}

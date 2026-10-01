@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/janumaruku/Dashbord-epitech/backend/config"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/handlers"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
 	"github.com/spf13/cobra"
 )
 
@@ -21,6 +22,7 @@ var serveCommand = &cobra.Command{
 		}
 
 		r := gin.Default()
+		r.Use(middleware.ErrorHandler())
 		handlers.RegisterRoutes(r, app)
 
 		if err := r.Run(":" + port); err != nil {
