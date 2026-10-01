@@ -160,9 +160,9 @@ Implements UC7's delete path. Immediate, no soft-delete/restore (RG per UC7).
 
 ## Phase 7 — Widgets (Frontend Core)
 
-### T024 — Dashboard grid with react-grid-layout
+### T024 — Dashboard grid (hand-rolled, no layout library)
 `frontend`
-`DashboardGrid` component (doc.md §3). Renders widget instances at their stored position/size.
+`DashboardGrid` component (doc.md §3). Renders widget instances at their stored position/size. No drag/resize/grid-layout library — Epitech staff confirmed `react-grid-layout` and equivalents are banned ("trop facile de faire un dashboard avec"); positioning math is implemented directly (Pointer Events API).
 **Acceptance:** Layout persists across reloads (positions come from the backend, not local state).
 
 ### T025 — Add Widget flow with dynamic config form

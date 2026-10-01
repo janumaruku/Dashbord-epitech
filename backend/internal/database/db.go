@@ -8,5 +8,5 @@ import (
 )
 
 func Connect() (*gorm.DB, error) {
-	return gorm.Open(mysql.Open(config.MySQLDSN()), &gorm.Config{})
+	return gorm.Open(mysql.Open(config.MySQLDSN()), &gorm.Config{TranslateError: true})
 }

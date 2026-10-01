@@ -23,3 +23,27 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 
 	return nil
 }
+
+func UsernameExists(db *gorm.DB, username string) (bool, error) {
+	var count int64
+
+	if err := db.Model(&User{}).Where("username = ?", username).Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func EmailExists(db *gorm.DB, email string) (bool, error) {
+	var count int64
+
+	if err := db.Model(&User{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func CreateUser(db *gorm.DB, user *User) error {
+	return db.Create(user).Error
+}

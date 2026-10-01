@@ -569,7 +569,8 @@ When a user opens the dashboard, the frontend calls `GET /dashboard/widgets`. Fo
 | **Frontend Framework** | Next.js | 14.x | SSR optimization, file-based routing, built-in API routes |
 | **Frontend Runtime** | React | 18.x | Component-based, widget architecture, large ecosystem |
 | **Frontend Language** | TypeScript | 5.x | Type safety, better IDE support, fewer runtime errors |
-| **Frontend Styling** | Tailwind | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
+| **Frontend Styling** | SCSS | Native (Next.js Sass support) | Component-scoped stylesheets, familiar CSS syntax, no utility-class lock-in |
+| **Frontend Drag-Drop** | Hand-rolled (Pointer Events API) | N/A | Epitech subject bans grid/drag-drop layout libraries (confirmed by staff: `react-grid-layout` is explicitly disallowed — "trop facile de faire un dashboard avec") |
 | **Backend Framework** | Gin Web Framework | 1.25+ | Fast, minimal, clean routing, middleware support |
 | **Backend Runtime/Language** | Go | 1.21+ | Goroutines for concurrency, compiled performance, single binary |
 | **Backend CLI** | Cobra | 1.8+ | Structures the binary as subcommands (`serve`, `migrate`, `seed`) instead of ad-hoc flags |
@@ -578,7 +579,7 @@ When a user opens the dashboard, the frontend calls `GET /dashboard/widgets`. Fo
 | **Migrations** | Goose | 3.x | Explicit, versioned, reviewable SQL migrations (up/down), driven via the `migrate` Cobra command |
 | **Authentication** | JWT (HS256) | Standard | Stateless, scalable, easy with Docker |
 | **Password Hashing** | bcrypt | Standard | Industry-standard, resistant to brute-force |
-| **OAuth 2.0** | go-oauth2 | Standard | Handles GitHub, Google, Microsoft integrations |
+| **OAuth 2.0** | Hand-rolled (`net/http`) | N/A | Epitech subject bans OAuth libraries that perform the flow automatically — the authorization-code exchange is implemented directly |
 | **Scheduling** | Go time.Ticker | Native | No external deps, goroutines for concurrency |
 | **Deployment** | Docker | 24.x | Standardized, reproducible, per Epitech spec |
 | **Orchestration** | Docker Compose | 3.8+ | Local dev & simple deployment |
@@ -606,7 +607,7 @@ dashboard/
 │   │   │   ├── WeatherWidget.tsx
 │   │   │   ├── GitHubWidget.tsx
 │   │   │   └── RSSWidget.tsx
-│   │   ├── DashboardGrid.tsx         # react-grid-layout wrapper
+│   │   ├── DashboardGrid.tsx         # Hand-rolled drag/resize grid (no layout library — see §3 Frontend Drag-Drop)
 │   │   ├── WidgetCard.tsx            # Wrapper for widgets
 │   │   ├── Header.tsx
 │   │   └── Sidebar.tsx
@@ -649,10 +650,13 @@ dashboard/
 │   │   │   └── service.go
 │   │   ├── database/
 │   │   │   └── db.go                 # GORM connection (MySQL)
-│   │   ├── auth/                     # JWT + OAuth
+│   │   ├── auth/                     # JWT + OAuth + password hashing
 │   │   │   ├── jwt.go
 │   │   │   ├── oauth.go
+│   │   │   ├── password.go           # bcrypt hashing
 │   │   │   └── encrypt.go            # Token encryption
+│   │   ├── middleware/
+│   │   │   └── error.go              # Centralized error handling via c.Error()/c.Next()
 │   │   └── scheduler/                # Timer mechanism ★
 │   │       └── widget_refresh.go     # Goroutine scheduler
 │   ├── pkg/
