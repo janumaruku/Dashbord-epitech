@@ -1,11 +1,14 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+var ErrUserNotFound = errors.New("user not found")
 
 type User struct {
 	ID           string `gorm:"type:char(36);primaryKey"`
@@ -46,4 +49,18 @@ func EmailExists(db *gorm.DB, email string) (bool, error) {
 
 func CreateUser(db *gorm.DB, user *User) error {
 	return db.Create(user).Error
+}
+
+func FindUserByEmail(db *gorm.DB, email string) (*User, error) {
+	var user User
+
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrUserNotFound
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
 }
