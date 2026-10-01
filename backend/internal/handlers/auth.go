@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,16 +18,15 @@ const (
 	msgInvalidPassword    = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
 	msgUsernameTaken      = "Username already taken"
 	msgEmailTaken         = "Email already registered"
+	msgInvalidCredentials = "Invalid email or password"
 )
 
-type registerRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (app *App) Register(c *gin.Context) {
-	var req registerRequest
+	var req struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidRequestBody})
 		return
@@ -91,6 +91,49 @@ func (app *App) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
+		"token": token,
+		"user": gin.H{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
+}
+
+func (app *App) Login(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidRequestBody})
+		return
+	}
+
+	user, err := models.FindUserByEmail(app.DB, req.Email)
+	if err != nil {
+		if errors.Is(err, models.ErrUserNotFound) {
+			c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidCredentials})
+			return
+		}
+
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	if err := auth.CheckPassword(req.Password, user.PasswordHash); err != nil {
+		c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidCredentials})
+		return
+	}
+
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		c.Error(&middleware.ServerError{Err: err})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
 		"token": token,
 		"user": gin.H{
 			"id":       user.ID,
