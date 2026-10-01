@@ -219,14 +219,14 @@ The user wants to discover which services they can integrate into their dashboar
 ```json
 [
    {
-      "id": 1,
+      "id": "6f2c1e2a-...-uuid",
       "name": "weather",
       "description": "Weather data from OpenWeatherMap",
       "requires_auth": false,
       "oauth_provider": null
    },
    {
-      "id": 2,
+      "id": "a91d4b7c-...-uuid",
       "name": "github",
       "description": "GitHub activity and repositories",
       "requires_auth": true,
