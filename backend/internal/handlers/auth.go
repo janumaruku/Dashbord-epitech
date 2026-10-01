@@ -13,12 +13,12 @@ import (
 )
 
 const (
-	msgInvalidRequestBody = "Invalid request body"
-	msgInvalidUsername    = "Username must be 3-50 alphanumeric characters or underscores"
-	msgInvalidEmail       = "Invalid email format"
-	msgInvalidPassword    = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
-	msgUsernameTaken      = "Username already taken"
-	msgEmailTaken         = "Email already registered"
+	msgInvalidRequestBody  = "Invalid request body"
+	msgInvalidUsername     = "Username must be 3-50 alphanumeric characters or underscores"
+	msgInvalidEmail        = "Invalid email format"
+	msgInvalidPassword     = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
+	msgUsernameTaken       = "Username already taken"
+	msgEmailTaken          = "Email already registered"
 	msgInvalidCredentials  = "Invalid email or password"
 	msgInvalidRefreshToken = "Invalid or expired refresh token"
 )
@@ -36,15 +36,7 @@ func (app *App) issueTokensAndRespond(c *gin.Context, status int, user *models.U
 		return
 	}
 
-	c.JSON(status, gin.H{
-		"token":         token,
-		"refresh_token": refreshToken,
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-		},
-	})
+	c.JSON(status, NewAuthPresenter(token, refreshToken, user))
 }
 
 func (app *App) issueRefreshToken(userID string) (string, error) {
@@ -166,8 +158,6 @@ type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// Refresh implements T010: exchange a valid, unexpired refresh token for a
-// new access token, rotating the refresh token in the process.
 func (app *App) Refresh(c *gin.Context) {
 	var req refreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -212,8 +202,5 @@ func (app *App) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"token":         token,
-		"refresh_token": newRefreshToken,
-	})
+	c.JSON(http.StatusOK, RefreshPresenter{Token: token, RefreshToken: newRefreshToken})
 }
