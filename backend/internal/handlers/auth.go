@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,6 +21,49 @@ const (
 	msgEmailTaken         = "Email already registered"
 	msgInvalidCredentials = "Invalid email or password"
 )
+
+func (app *App) issueTokensAndRespond(c *gin.Context, status int, user *models.User) {
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		c.Error(&middleware.ServerError{Err: err})
+		return
+	}
+
+	refreshToken, err := app.issueRefreshToken(user.ID)
+	if err != nil {
+		c.Error(&middleware.DBError{Err: err})
+		return
+	}
+
+	c.JSON(status, gin.H{
+		"token":         token,
+		"refresh_token": refreshToken,
+		"user": gin.H{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
+}
+
+func (app *App) issueRefreshToken(userID string) (string, error) {
+	raw, hash, err := auth.GenerateRefreshToken()
+	if err != nil {
+		return "", err
+	}
+
+	rt := models.RefreshToken{
+		UserID:    userID,
+		TokenHash: hash,
+		ExpiresAt: time.Now().Add(auth.RefreshTokenTTL),
+	}
+
+	if err := models.CreateRefreshToken(app.DB, &rt); err != nil {
+		return "", err
+	}
+
+	return raw, nil
+}
 
 func (app *App) Register(c *gin.Context) {
 	var req struct {
@@ -84,20 +128,7 @@ func (app *App) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"token": token,
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-		},
-	})
+	app.issueTokensAndRespond(c, http.StatusCreated, &user)
 }
 
 func (app *App) Login(c *gin.Context) {
@@ -127,18 +158,5 @@ func (app *App) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := auth.GenerateToken(user.ID)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-		},
-	})
+	app.issueTokensAndRespond(c, http.StatusOK, user)
 }
