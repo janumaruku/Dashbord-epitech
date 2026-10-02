@@ -1,19 +1,21 @@
 "use client"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginForm() {
     const router = useRouter();
-
-    async function handleSumit(event: React.SubmitEvent<HTMLFormElement>) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        // Temporaire : on considère que l'inscription a réussi
-        const signInSuccessful = true;
-
-        if (signInSuccessful) {
-            router.push("/");
+        if (!email || !password) {
+            setError("Please fill in all fields");
+            return;
         }
+        router.push("/");
     }
     return (
         <div className="w-full max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-lg">
@@ -21,7 +23,7 @@ export default function LoginForm() {
                 Sign in to your dashboard
             </h1>
             <form
-                onSubmit={handleSumit}
+                onSubmit={handleSubmit}
                 className="flex flex-col gap-5"
             >
                 <div className="flex flex-col gap-2">
@@ -31,6 +33,11 @@ export default function LoginForm() {
                     <input
                         id="email"
                         type="email"
+                        value={email}
+                        onChange={(event) => {
+                            setEmail(event.target.value);
+                            setError("");
+                        }}
                         className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
@@ -41,9 +48,17 @@ export default function LoginForm() {
                     <input
                         id="password"
                         type="password"
+                        value={password}
+                        onChange={(event) => {
+                            setPassword(event.target.value);
+                            setError("");
+                        }}
                         className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
+                { error && (
+                    <p className="text-sm text-red-400"> {error} </p>
+                )}
                 <button
                     type="submit"
                     className="mt-2 rounded-lg bg-white px-4 py-3 font-medium text-black hover:bg-zinc-200"
