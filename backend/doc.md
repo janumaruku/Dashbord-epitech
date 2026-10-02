@@ -640,10 +640,11 @@ dashboard/
 │   │   │   ├── services.go
 │   │   │   ├── widgets.go
 │   │   │   └── about.go              # /about.json endpoint
-│   │   ├── services/                 # Business logic
-│   │   │   ├── auth.go
-│   │   │   ├── widget.go
-│   │   │   └── external.go
+│   │   ├── usecases/                  # Business logic, HTTP-agnostic (renamed from the originally planned "services" — collided with the Service domain entity)
+│   │   │   ├── register.go
+│   │   │   ├── refresh_token.go
+│   │   │   ├── validate.go           # RG1-RG3 input validation
+│   │   │   └── errors.go             # DBError/InternalError — translated to middleware errors by handlers
 │   │   ├── models/                   # GORM models
 │   │   │   ├── user.go
 │   │   │   ├── widget.go
