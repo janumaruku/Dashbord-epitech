@@ -3,13 +3,10 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/janumaruku/Dashbord-epitech/backend/internal/auth"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
-	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/usecases"
 )
 
@@ -23,10 +20,6 @@ const (
 	msgInvalidCredentials  = "Invalid email or password"
 	msgInvalidRefreshToken = "Invalid or expired refresh token"
 )
-
-func (app *App) issueRefreshToken(userID string) (string, error) {
-	return usecases.IssueRefreshToken(app.DB, userID)
-}
 
 func (app *App) Register(c *gin.Context) {
 	var req struct {
@@ -107,42 +100,21 @@ func (app *App) Refresh(c *gin.Context) {
 		return
 	}
 
-	hash := auth.HashRefreshToken(req.RefreshToken)
-
-	rt, err := models.FindRefreshTokenByHash(app.DB, hash)
+	result, err := usecases.Refresh(app.DB, req.RefreshToken)
 	if err != nil {
-		if errors.Is(err, models.ErrRefreshTokenNotFound) {
+		switch {
+		case errors.Is(err, usecases.ErrInvalidRefreshToken):
 			c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
-			return
+		default:
+			var dbErr *usecases.DBError
+			if errors.As(err, &dbErr) {
+				c.Error(&middleware.DBError{Err: dbErr.Err})
+			} else {
+				c.Error(&middleware.ServerError{Err: err})
+			}
 		}
-
-		c.Error(&middleware.DBError{Err: err})
 		return
 	}
 
-	if time.Now().After(rt.ExpiresAt) {
-		_ = models.DeleteRefreshToken(app.DB, rt.ID) // best-effort cleanup
-
-		c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
-		return
-	}
-
-	token, err := auth.GenerateToken(rt.UserID)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	newRefreshToken, err := app.issueRefreshToken(rt.UserID)
-	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-
-	if err := models.DeleteRefreshToken(app.DB, rt.ID); err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-
-	c.JSON(http.StatusOK, RefreshPresenter{Token: token, RefreshToken: newRefreshToken})
+	c.JSON(http.StatusOK, RefreshPresenter{Token: result.Token, RefreshToken: result.RefreshToken})
 }
