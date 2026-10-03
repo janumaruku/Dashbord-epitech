@@ -642,6 +642,7 @@ dashboard/
 │   │   │   └── about.go              # /about.json endpoint
 │   │   ├── usecases/                  # Business logic, HTTP-agnostic (renamed from the originally planned "services" — collided with the Service domain entity)
 │   │   │   ├── register.go
+│   │   │   ├── login.go
 │   │   │   ├── refresh_token.go
 │   │   │   ├── validate.go           # RG1-RG3 input validation
 │   │   │   └── errors.go             # DBError/InternalError — translated to middleware errors by handlers
