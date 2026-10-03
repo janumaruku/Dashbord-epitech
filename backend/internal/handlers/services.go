@@ -1,18 +1,24 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
-	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/usecases"
 )
 
 func (app *App) ListServices(c *gin.Context) {
-	services, err := models.ListServices(app.DB)
+	services, err := usecases.ListServices(app.DB)
 	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
+		var dbErr *usecases.DBError
+		if errors.As(err, &dbErr) {
+			c.Error(&middleware.DBError{Err: dbErr.Err})
+		} else {
+			c.Error(&middleware.ServerError{Err: err})
+		}
 		return
 	}
 

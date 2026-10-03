@@ -645,6 +645,7 @@ dashboard/
 │   │   │   ├── login.go
 │   │   │   ├── refresh.go
 │   │   │   ├── refresh_token.go
+│   │   │   ├── services.go           # UC3: list available services
 │   │   │   ├── validate.go           # RG1-RG3 input validation
 │   │   │   └── errors.go             # DBError/InternalError — translated to middleware errors by handlers
 │   │   ├── models/                   # GORM models
