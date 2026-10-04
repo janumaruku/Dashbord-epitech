@@ -3,68 +3,23 @@ package handlers
 import (
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/janumaruku/Dashbord-epitech/backend/internal/auth"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
-	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/usecases"
 )
 
 const (
-	msgInvalidRequestBody = "Invalid request body"
-	msgInvalidUsername    = "Username must be 3-50 alphanumeric characters or underscores"
-	msgInvalidEmail       = "Invalid email format"
-	msgInvalidPassword    = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
-	msgUsernameTaken      = "Username already taken"
-	msgEmailTaken         = "Email already registered"
+	msgInvalidRequestBody  = "Invalid request body"
+	msgInvalidUsername     = "Username must be 3-50 alphanumeric characters or underscores"
+	msgInvalidEmail        = "Invalid email format"
+	msgInvalidPassword     = "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character"
+	msgUsernameTaken       = "Username already taken"
+	msgEmailTaken          = "Email already registered"
 	msgInvalidCredentials  = "Invalid email or password"
 	msgInvalidRefreshToken = "Invalid or expired refresh token"
 )
-
-func (app *App) issueTokensAndRespond(c *gin.Context, status int, user *models.User) {
-	token, err := auth.GenerateToken(user.ID)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	refreshToken, err := app.issueRefreshToken(user.ID)
-	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-
-	c.JSON(status, gin.H{
-		"token":         token,
-		"refresh_token": refreshToken,
-		"user": gin.H{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-		},
-	})
-}
-
-func (app *App) issueRefreshToken(userID string) (string, error) {
-	raw, hash, err := auth.GenerateRefreshToken()
-	if err != nil {
-		return "", err
-	}
-
-	rt := models.RefreshToken{
-		UserID:    userID,
-		TokenHash: hash,
-		ExpiresAt: time.Now().Add(auth.RefreshTokenTTL),
-	}
-
-	if err := models.CreateRefreshToken(app.DB, &rt); err != nil {
-		return "", err
-	}
-
-	return raw, nil
-}
 
 func (app *App) Register(c *gin.Context) {
 	var req struct {
@@ -77,59 +32,31 @@ func (app *App) Register(c *gin.Context) {
 		return
 	}
 
-	if !validUsername(req.Username) {
-		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidUsername})
-		return
-	}
-
-	if !validEmail(req.Email) {
-		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidEmail})
-		return
-	}
-
-	if !validPassword(req.Password) {
-		c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidPassword})
-		return
-	}
-
-	usernameTaken, err := models.UsernameExists(app.DB, req.Username)
+	result, err := usecases.Register(app.DB, req.Username, req.Email, req.Password)
 	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-	if usernameTaken {
-		c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgUsernameTaken})
-		return
-	}
-
-	emailTaken, err := models.EmailExists(app.DB, req.Email)
-	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-	if emailTaken {
-		c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgEmailTaken})
-		return
-	}
-
-	passwordHash, err := auth.HashPassword(req.Password)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	user := models.User{
-		Username:     req.Username,
-		Email:        req.Email,
-		PasswordHash: passwordHash,
-	}
-
-	if err := models.CreateUser(app.DB, &user); err != nil {
-		c.Error(&middleware.DBError{Err: err})
+		switch {
+		case errors.Is(err, usecases.ErrInvalidUsername):
+			c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidUsername})
+		case errors.Is(err, usecases.ErrInvalidEmail):
+			c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidEmail})
+		case errors.Is(err, usecases.ErrInvalidPassword):
+			c.Error(&middleware.DashbordError{Status: http.StatusBadRequest, Message: msgInvalidPassword})
+		case errors.Is(err, usecases.ErrUsernameTaken):
+			c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgUsernameTaken})
+		case errors.Is(err, usecases.ErrEmailTaken):
+			c.Error(&middleware.DashbordError{Status: http.StatusConflict, Message: msgEmailTaken})
+		default:
+			var dbErr *usecases.DBError
+			if errors.As(err, &dbErr) {
+				c.Error(&middleware.DBError{Err: dbErr.Err})
+			} else {
+				c.Error(&middleware.ServerError{Err: err})
+			}
+		}
 		return
 	}
 
-	app.issueTokensAndRespond(c, http.StatusCreated, &user)
+	c.JSON(http.StatusCreated, NewAuthPresenter(result.Token, result.RefreshToken, result.User))
 }
 
 func (app *App) Login(c *gin.Context) {
@@ -143,31 +70,29 @@ func (app *App) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := models.FindUserByEmail(app.DB, req.Email)
+	result, err := usecases.Login(app.DB, req.Email, req.Password)
 	if err != nil {
-		if errors.Is(err, models.ErrUserNotFound) {
+		switch {
+		case errors.Is(err, usecases.ErrInvalidCredentials):
 			c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidCredentials})
-			return
+		default:
+			var dbErr *usecases.DBError
+			if errors.As(err, &dbErr) {
+				c.Error(&middleware.DBError{Err: dbErr.Err})
+			} else {
+				c.Error(&middleware.ServerError{Err: err})
+			}
 		}
-
-		c.Error(&middleware.DBError{Err: err})
 		return
 	}
 
-	if err := auth.CheckPassword(req.Password, user.PasswordHash); err != nil {
-		c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidCredentials})
-		return
-	}
-
-	app.issueTokensAndRespond(c, http.StatusOK, user)
+	c.JSON(http.StatusOK, NewAuthPresenter(result.Token, result.RefreshToken, result.User))
 }
 
 type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-// Refresh implements T010: exchange a valid, unexpired refresh token for a
-// new access token, rotating the refresh token in the process.
 func (app *App) Refresh(c *gin.Context) {
 	var req refreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -175,45 +100,21 @@ func (app *App) Refresh(c *gin.Context) {
 		return
 	}
 
-	hash := auth.HashRefreshToken(req.RefreshToken)
-
-	rt, err := models.FindRefreshTokenByHash(app.DB, hash)
+	result, err := usecases.Refresh(app.DB, req.RefreshToken)
 	if err != nil {
-		if errors.Is(err, models.ErrRefreshTokenNotFound) {
+		switch {
+		case errors.Is(err, usecases.ErrInvalidRefreshToken):
 			c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
-			return
+		default:
+			var dbErr *usecases.DBError
+			if errors.As(err, &dbErr) {
+				c.Error(&middleware.DBError{Err: dbErr.Err})
+			} else {
+				c.Error(&middleware.ServerError{Err: err})
+			}
 		}
-
-		c.Error(&middleware.DBError{Err: err})
 		return
 	}
 
-	if time.Now().After(rt.ExpiresAt) {
-		_ = models.DeleteRefreshToken(app.DB, rt.ID) // best-effort cleanup
-
-		c.Error(&middleware.DashbordError{Status: http.StatusUnauthorized, Message: msgInvalidRefreshToken})
-		return
-	}
-
-	token, err := auth.GenerateToken(rt.UserID)
-	if err != nil {
-		c.Error(&middleware.ServerError{Err: err})
-		return
-	}
-
-	newRefreshToken, err := app.issueRefreshToken(rt.UserID)
-	if err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-
-	if err := models.DeleteRefreshToken(app.DB, rt.ID); err != nil {
-		c.Error(&middleware.DBError{Err: err})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"token":         token,
-		"refresh_token": newRefreshToken,
-	})
+	c.JSON(http.StatusOK, RefreshPresenter{Token: result.Token, RefreshToken: result.RefreshToken})
 }

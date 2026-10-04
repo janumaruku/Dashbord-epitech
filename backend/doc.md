@@ -219,14 +219,14 @@ The user wants to discover which services they can integrate into their dashboar
 ```json
 [
    {
-      "id": 1,
+      "id": "6f2c1e2a-...-uuid",
       "name": "weather",
       "description": "Weather data from OpenWeatherMap",
       "requires_auth": false,
       "oauth_provider": null
    },
    {
-      "id": 2,
+      "id": "a91d4b7c-...-uuid",
       "name": "github",
       "description": "GitHub activity and repositories",
       "requires_auth": true,
@@ -640,10 +640,14 @@ dashboard/
 │   │   │   ├── services.go
 │   │   │   ├── widgets.go
 │   │   │   └── about.go              # /about.json endpoint
-│   │   ├── services/                 # Business logic
-│   │   │   ├── auth.go
-│   │   │   ├── widget.go
-│   │   │   └── external.go
+│   │   ├── usecases/                  # Business logic, HTTP-agnostic (renamed from the originally planned "services" — collided with the Service domain entity)
+│   │   │   ├── register.go
+│   │   │   ├── login.go
+│   │   │   ├── refresh.go
+│   │   │   ├── refresh_token.go
+│   │   │   ├── services.go           # UC3: list available services
+│   │   │   ├── validate.go           # RG1-RG3 input validation
+│   │   │   └── errors.go             # DBError/InternalError — translated to middleware errors by handlers
 │   │   ├── models/                   # GORM models
 │   │   │   ├── user.go
 │   │   │   ├── widget.go
