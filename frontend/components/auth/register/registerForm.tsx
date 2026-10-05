@@ -2,12 +2,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { registerUser } from "@/services/authServices";
 
 export default function RegisterForm() {
     const router = useRouter();
 
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [username, setUserName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -16,7 +16,7 @@ export default function RegisterForm() {
     async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
 
-        if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        if (!username || !email || !password || !confirmPassword) {
             setError("Please fill in all fields");
             return;
         }
@@ -32,6 +32,16 @@ export default function RegisterForm() {
             setError("Passwords do not match");
             return;
         }
+        const response = await registerUser(
+            username,
+            email,
+            password
+        );
+        if (!response.ok) {
+            const data = await response.json();
+            setError(data.error || "Registration failed");
+            return;
+        }
         router.push("/login");
     }
     return (
@@ -45,31 +55,15 @@ export default function RegisterForm() {
                 className="flex flex-col gap-5"
             >
                 <div className="flex flex-col gap-2">
-                    <label htmlFor="firstName" className="text-sm text-zinc-300">
-                        First name
+                    <label htmlFor="username" className="text-sm text-zinc-300">
+                        username
                     </label>
                     <input
-                        id="firstName"
+                        id="username"
                         type="text"
-                        value={firstName}
+                        value={username}
                         onChange={(event) => {
-                            setFirstName(event.target.value);
-                            setError("");
-                        }}
-                        className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
-                    />
-                </div>
-
-                <div className="flex flex-col gap-2">
-                    <label htmlFor="lastName" className="text-sm text-zinc-300">
-                        Last name
-                    </label>
-                    <input
-                        id="lastName"
-                        type="text"
-                        value={lastName}
-                        onChange={(event) => {
-                            setLastName(event.target.value);
+                            setUserName(event.target.value);
                             setError("");
                         }}
                         className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
@@ -107,6 +101,7 @@ export default function RegisterForm() {
                         className="rounded-lg border border-zinc-600 bg-zinc-950 px-4 py-3 outline-none focus:border-zinc-400"
                     />
                 </div>
+
                 <div className="flex flex-col gap-2">
                     <label htmlFor="confirmPassword" className="text-sm text-zinc-300">
                         Confirm password
