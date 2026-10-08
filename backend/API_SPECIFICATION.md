@@ -72,6 +72,7 @@ Internal details (SQL, stack traces, underlying library errors) are never includ
 | 201 | Resource created (account registration) |
 | 400 | Malformed body or failed input validation |
 | 401 | Missing, invalid, or expired credentials |
+| 404 | Resource with the given ID does not exist |
 | 409 | Conflict with existing data |
 | 500 | Internal or database failure |
 
@@ -88,6 +89,7 @@ Internal details (SQL, stack traces, underlying library errors) are never includ
 | POST | `/auth/login` | None | Implemented |
 | POST | `/auth/refresh` | None | Implemented |
 | GET | `/api/services` | Bearer | Implemented |
+| POST | `/api/services/:id/subscribe` | Bearer | Planned (T015) |
 
 ---
 
@@ -308,8 +310,57 @@ The list is empty until the services are seeded (ticket T006).
 
 ---
 
+### 2.7 POST `/api/services/:id/subscribe`
+
+Subscribes the authenticated user to a service that does not require OAuth (Weather and RSS). Implements UC4 for the non-OAuth path.
+
+**Status:** planned, ticket T015. Not yet implemented.
+
+**Auth:** `Bearer` access token required. The user is taken from the token's `sub` claim. The request must not include a user identifier.
+
+**Path parameter:**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | ID of the service, from `GET /api/services` |
+
+**Request:** no body.
+
+```
+POST /api/services/6f2c1e2a-8b1d-4c3e-9f7a-2d5b6c7e8f90/subscribe
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+**Response `201`** (proposed shape):
+
+```json
+{
+  "id": "c4e8a2f0-1b7d-4e6a-9c3f-8d2b5a1e7f60",
+  "service_id": "6f2c1e2a-8b1d-4c3e-9f7a-2d5b6c7e8f90",
+  "created_at": "2026-10-05T10:21:44Z"
+}
+```
+
+**Errors:**
+
+| Status | `code` | Message | Cause |
+|---|---|---|---|
+| 401 | `DASHBORD_ERROR` | `Missing or invalid authorization header` | As §2.6 |
+| 401 | `DASHBORD_ERROR` | `Invalid or expired token` | As §2.6 |
+| 400 | `DASHBORD_ERROR` | `This service requires OAuth` | The service has `requires_auth = true`. Use the OAuth flow (ticket T016). |
+| 404 | `DASHBORD_ERROR` | `Service not found` | No service with this ID |
+| 409 | `DASHBORD_ERROR` | `Already subscribed to this service` | The user already has a subscription to this service (RG4) |
+| 500 | `DB_ERROR` | `A database error occurred` | Database failure |
+
+**Notes:**
+- A subscription has no credentials. The `user_services` row has `credentials`, `oauth_token` and `oauth_refresh_token` set to `NULL`.
+- The `UNIQUE (user_id, service_id)` constraint is the last line of defence. A race between two identical requests produces the generic `This value already exists` (409, `DB_ERROR`) instead of the specific message above.
+
+---
+
 ## 3. Document history
 
 | Change | Ticket |
 |---|---|
 | Initial specification: `/about.json`, auth endpoints, `/api/services` | T008, T009, T010, T014 |
+| Planned: `POST /api/services/:id/subscribe`, replaces the earlier `/api/user-services/:id/subscribe` path | T015 |
