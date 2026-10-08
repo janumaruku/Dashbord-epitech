@@ -17,9 +17,6 @@ type RefreshResult struct {
 	RefreshToken string
 }
 
-// Refresh implements T010: validate a refresh token, issue a new access
-// token, and rotate the refresh token. "Not found" and "expired" both
-// return ErrInvalidRefreshToken, so callers can't tell which one it was.
 func Refresh(db *gorm.DB, rawRefreshToken string) (*RefreshResult, error) {
 	hash := auth.HashRefreshToken(rawRefreshToken)
 

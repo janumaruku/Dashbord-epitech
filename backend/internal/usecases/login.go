@@ -17,9 +17,6 @@ type LoginResult struct {
 	RefreshToken string
 }
 
-// Login implements UC2: verify credentials, issue tokens. A wrong email
-// and a wrong password both return ErrInvalidCredentials — the handler
-// must never let the caller tell which one was wrong.
 func Login(db *gorm.DB, email, password string) (*LoginResult, error) {
 	user, err := models.FindUserByEmail(db, email)
 	if err != nil {

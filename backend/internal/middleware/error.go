@@ -55,9 +55,6 @@ func (e *DBError) Error() string {
 	return MsgDatabaseError
 }
 
-// DashbordError is a business-logic error — invalid input, a conflict, an
-// unmet precondition. Unlike ServerError/DBError, its message is meant to
-// be shown to the user, so it's provided per call site rather than fixed.
 type DashbordError struct {
 	Status  int
 	Message string
