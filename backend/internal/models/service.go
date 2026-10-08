@@ -1,11 +1,14 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+var ErrServiceNotFound = errors.New("service not found")
 
 type Service struct {
 	ID            string  `gorm:"type:char(36);primaryKey"`
@@ -33,4 +36,18 @@ func ListServices(db *gorm.DB) ([]Service, error) {
 	}
 
 	return services, nil
+}
+
+func FindServiceByID(db *gorm.DB, id string) (*Service, error) {
+	var service Service
+
+	if err := db.First(&service, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrServiceNotFound
+		}
+
+		return nil, err
+	}
+
+	return &service, nil
 }
