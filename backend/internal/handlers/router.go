@@ -8,8 +8,16 @@ import (
 
 func RegisterRoutes(r *gin.Engine, app *App) {
 	r.GET("/about.json", AboutJSON)
-	r.POST("/auth/register", app.Register)
-	r.POST("/auth/login", app.Login)
-	r.POST("/auth/refresh", app.Refresh)
-	r.GET("/api/services", middleware.Auth(), app.ListServices)
+
+	{
+		authGroup := r.Group("/auth")
+		authGroup.POST("/register", app.Register)
+		authGroup.POST("/login", app.Login)
+		authGroup.POST("/refresh", app.Refresh)
+	}
+
+	{
+		apiGroup := r.Group("/api", middleware.Auth())
+		apiGroup.GET("/services", app.ListServices)
+	}
 }
