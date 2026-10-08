@@ -11,7 +11,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrServiceNotFound = &dashborderrors.DashbordError{
+var ErrServiceNotFound = &dashborderrors.DashboardError{
 	Code:    "SERVICE_NOT_FOUND",
 	Message: "Service not found",
 	Status:  http.StatusNotFound,

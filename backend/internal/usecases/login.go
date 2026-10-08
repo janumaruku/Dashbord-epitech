@@ -11,7 +11,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
 
-var ErrInvalidCredentials = &dashborderrors.DashbordError{
+var ErrInvalidCredentials = &dashborderrors.DashboardError{
 	Code:    "INVALID_CREDENTIALS",
 	Message: "Invalid email or password",
 	Status:  http.StatusUnauthorized,

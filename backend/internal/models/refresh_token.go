@@ -11,7 +11,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrRefreshTokenNotFound = &dashborderrors.DashbordError{
+var ErrRefreshTokenNotFound = &dashborderrors.DashboardError{
 	Code:    "REFRESH_TOKEN_NOT_FOUND",
 	Message: "Refresh token not found",
 	Status:  http.StatusNotFound,

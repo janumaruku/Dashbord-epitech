@@ -12,7 +12,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
 
-var ErrInvalidRefreshToken = &dashborderrors.DashbordError{
+var ErrInvalidRefreshToken = &dashborderrors.DashboardError{
 	Code:    "INVALID_REFRESH_TOKEN",
 	Message: "Invalid or expired refresh token",
 	Status:  http.StatusUnauthorized,

@@ -6,7 +6,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrDuplicateEntry = &dashborderrors.DashbordError{
+var ErrDuplicateEntry = &dashborderrors.DashboardError{
 	Code:    "DUPLICATE_ENTRY",
 	Message: "This value already exists",
 	Status:  http.StatusConflict,

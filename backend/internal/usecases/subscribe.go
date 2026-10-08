@@ -10,13 +10,13 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
 
-var ErrOAuthRequired = &dashborderrors.DashbordError{
+var ErrOAuthRequired = &dashborderrors.DashboardError{
 	Code:    "OAUTH_REQUIRED",
 	Message: "This service requires OAuth",
 	Status:  http.StatusBadRequest,
 }
 
-var ErrAlreadySubscribed = &dashborderrors.DashbordError{
+var ErrAlreadySubscribed = &dashborderrors.DashboardError{
 	Code:    "ALREADY_SUBSCRIBED",
 	Message: "Already subscribed to this service",
 	Status:  http.StatusConflict,

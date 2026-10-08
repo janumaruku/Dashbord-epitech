@@ -11,7 +11,7 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrUserNotFound = &dashborderrors.DashbordError{
+var ErrUserNotFound = &dashborderrors.DashboardError{
 	Code:    "USER_NOT_FOUND",
 	Message: "User not found",
 	Status:  http.StatusNotFound,

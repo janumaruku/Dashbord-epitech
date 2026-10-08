@@ -18,7 +18,7 @@ func ErrorHandler() gin.HandlerFunc {
 
 		err := c.Errors.Last().Err
 
-		var dashErr *dashborderrors.DashbordError
+		var dashErr *dashborderrors.DashboardError
 		if !errors.As(err, &dashErr) {
 			dashErr = dashborderrors.ErrInternal
 		}

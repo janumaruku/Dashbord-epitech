@@ -10,13 +10,13 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrMissingAuthHeader = &dashborderrors.DashbordError{
+var ErrMissingAuthHeader = &dashborderrors.DashboardError{
 	Code:    "MISSING_AUTH_HEADER",
 	Message: "Missing or invalid authorization header",
 	Status:  http.StatusUnauthorized,
 }
 
-var ErrInvalidToken = &dashborderrors.DashbordError{
+var ErrInvalidToken = &dashborderrors.DashboardError{
 	Code:    "INVALID_TOKEN",
 	Message: "Invalid or expired token",
 	Status:  http.StatusUnauthorized,

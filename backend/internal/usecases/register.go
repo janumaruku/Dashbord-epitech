@@ -10,31 +10,31 @@ import (
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
 
-var ErrInvalidUsername = &dashborderrors.DashbordError{
+var ErrInvalidUsername = &dashborderrors.DashboardError{
 	Code:    "INVALID_USERNAME",
 	Message: "Username must be 3-50 alphanumeric characters or underscores",
 	Status:  http.StatusBadRequest,
 }
 
-var ErrInvalidEmail = &dashborderrors.DashbordError{
+var ErrInvalidEmail = &dashborderrors.DashboardError{
 	Code:    "INVALID_EMAIL",
 	Message: "Invalid email format",
 	Status:  http.StatusBadRequest,
 }
 
-var ErrInvalidPassword = &dashborderrors.DashbordError{
+var ErrInvalidPassword = &dashborderrors.DashboardError{
 	Code:    "INVALID_PASSWORD",
 	Message: "Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character",
 	Status:  http.StatusBadRequest,
 }
 
-var ErrUsernameTaken = &dashborderrors.DashbordError{
+var ErrUsernameTaken = &dashborderrors.DashboardError{
 	Code:    "USERNAME_TAKEN",
 	Message: "Username already taken",
 	Status:  http.StatusConflict,
 }
 
-var ErrEmailTaken = &dashborderrors.DashbordError{
+var ErrEmailTaken = &dashborderrors.DashboardError{
 	Code:    "EMAIL_TAKEN",
 	Message: "Email already registered",
 	Status:  http.StatusConflict,
