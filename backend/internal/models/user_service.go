@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,5 +39,13 @@ func UserServiceExists(db *gorm.DB, userID, serviceID string) (bool, error) {
 }
 
 func CreateUserService(db *gorm.DB, us *UserService) error {
-	return db.Create(us).Error
+	if err := db.Create(us).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return ErrDuplicateEntry
+		}
+
+		return err
+	}
+
+	return nil
 }

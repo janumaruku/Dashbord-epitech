@@ -7,10 +7,5 @@ import (
 )
 
 func ListServices(db *gorm.DB) ([]models.Service, error) {
-	services, err := models.ListServices(db)
-	if err != nil {
-		return nil, &DBError{Err: err}
-	}
-
-	return services, nil
+	return models.ListServices(db)
 }

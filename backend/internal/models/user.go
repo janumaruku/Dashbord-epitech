@@ -2,13 +2,20 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrUserNotFound = errors.New("user not found")
+var ErrUserNotFound = &dashborderrors.DashbordError{
+	Code:    "USER_NOT_FOUND",
+	Message: "User not found",
+	Status:  http.StatusNotFound,
+}
 
 type User struct {
 	ID           string `gorm:"type:char(36);primaryKey"`
@@ -48,7 +55,15 @@ func EmailExists(db *gorm.DB, email string) (bool, error) {
 }
 
 func CreateUser(db *gorm.DB, user *User) error {
-	return db.Create(user).Error
+	if err := db.Create(user).Error; err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return ErrDuplicateEntry
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func FindUserByEmail(db *gorm.DB, email string) (*User, error) {

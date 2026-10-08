@@ -1,19 +1,26 @@
 package usecases
 
 import (
-	"errors"
+	"net/http"
 	"time"
 
 	"gorm.io/gorm"
 
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
 
-var (
-	ErrServiceNotFound   = errors.New("service not found")
-	ErrOAuthRequired     = errors.New("service requires oauth")
-	ErrAlreadySubscribed = errors.New("already subscribed to this service")
-)
+var ErrOAuthRequired = &dashborderrors.DashbordError{
+	Code:    "OAUTH_REQUIRED",
+	Message: "This service requires OAuth",
+	Status:  http.StatusBadRequest,
+}
+
+var ErrAlreadySubscribed = &dashborderrors.DashbordError{
+	Code:    "ALREADY_SUBSCRIBED",
+	Message: "Already subscribed to this service",
+	Status:  http.StatusConflict,
+}
 
 type SubscribeResult struct {
 	ID        string
@@ -24,11 +31,7 @@ type SubscribeResult struct {
 func Subscribe(db *gorm.DB, userID, serviceID string) (*SubscribeResult, error) {
 	service, err := models.FindServiceByID(db, serviceID)
 	if err != nil {
-		if errors.Is(err, models.ErrServiceNotFound) {
-			return nil, ErrServiceNotFound
-		}
-
-		return nil, &DBError{Err: err}
+		return nil, err
 	}
 
 	if service.RequiresAuth {
@@ -37,7 +40,7 @@ func Subscribe(db *gorm.DB, userID, serviceID string) (*SubscribeResult, error) 
 
 	alreadySubscribed, err := models.UserServiceExists(db, userID, serviceID)
 	if err != nil {
-		return nil, &DBError{Err: err}
+		return nil, err
 	}
 	if alreadySubscribed {
 		return nil, ErrAlreadySubscribed
@@ -49,7 +52,7 @@ func Subscribe(db *gorm.DB, userID, serviceID string) (*SubscribeResult, error) 
 	}
 
 	if err := models.CreateUserService(db, &us); err != nil {
-		return nil, &DBError{Err: err}
+		return nil, err
 	}
 
 	return &SubscribeResult{ID: us.ID, ServiceID: us.ServiceID, CreatedAt: us.CreatedAt}, nil

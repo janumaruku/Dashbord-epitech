@@ -2,13 +2,20 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrRefreshTokenNotFound = errors.New("refresh token not found")
+var ErrRefreshTokenNotFound = &dashborderrors.DashbordError{
+	Code:    "REFRESH_TOKEN_NOT_FOUND",
+	Message: "Refresh token not found",
+	Status:  http.StatusNotFound,
+}
 
 type RefreshToken struct {
 	ID        string `gorm:"type:char(36);primaryKey"`

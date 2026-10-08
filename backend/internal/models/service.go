@@ -2,13 +2,20 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 )
 
-var ErrServiceNotFound = errors.New("service not found")
+var ErrServiceNotFound = &dashborderrors.DashbordError{
+	Code:    "SERVICE_NOT_FOUND",
+	Message: "Service not found",
+	Status:  http.StatusNotFound,
+}
 
 type Service struct {
 	ID            string  `gorm:"type:char(36);primaryKey"`

@@ -1,6 +1,11 @@
 package handlers
 
-import "github.com/janumaruku/Dashbord-epitech/backend/internal/models"
+import (
+	"time"
+
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/usecases"
+)
 
 type ServicePresenter struct {
 	ID            string  `json:"id"`
@@ -17,5 +22,19 @@ func NewServicePresenter(s models.Service) ServicePresenter {
 		Description:   s.Description,
 		RequiresAuth:  s.RequiresAuth,
 		OAuthProvider: s.OAuthProvider,
+	}
+}
+
+type SubscriptionPresenter struct {
+	ID        string    `json:"id"`
+	ServiceID string    `json:"service_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func NewSubscriptionPresenter(r *usecases.SubscribeResult) SubscriptionPresenter {
+	return SubscriptionPresenter{
+		ID:        r.ID,
+		ServiceID: r.ServiceID,
+		CreatedAt: r.CreatedAt,
 	}
 }

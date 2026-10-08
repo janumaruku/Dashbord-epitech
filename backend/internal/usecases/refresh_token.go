@@ -12,7 +12,7 @@ import (
 func IssueRefreshToken(db *gorm.DB, userID string) (string, error) {
 	raw, hash, err := auth.GenerateRefreshToken()
 	if err != nil {
-		return "", &InternalError{Err: err}
+		return "", err
 	}
 
 	rt := models.RefreshToken{
@@ -22,7 +22,7 @@ func IssueRefreshToken(db *gorm.DB, userID string) (string, error) {
 	}
 
 	if err := models.CreateRefreshToken(db, &rt); err != nil {
-		return "", &DBError{Err: err}
+		return "", err
 	}
 
 	return raw, nil
