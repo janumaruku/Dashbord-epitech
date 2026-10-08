@@ -441,8 +441,8 @@ Acceptance sizes: 375 px, 768 px, 1440 px. Every page is usable at each size wit
 
 `doc.md` does not settle these. Each needs a decision before the ticket that depends on it is closed.
 
-1. **GitHub subscribe body.** Which fields does `POST /api/user-services/:service_id/subscribe` take for the OAuth case (`code`, `state`)? `doc.md` §5 describes the exchange but not the request shape.
-2. **Subscription endpoint details.** `doc.md` UC4 gives `POST /api/user-services/1/subscribe` for Weather. Confirm the path form (`:service_id` vs `1`), the response, and the endpoint for disconnect (required by §7.6; `doc.md` does not define it).
+1. **GitHub subscribe body.** The subscribe endpoint is `POST /api/services/:id/subscribe` (see `backend/API_SPECIFICATION.md` §2.7). The non-OAuth path takes no body. Which fields does the OAuth case take (`code`, `state`)? Ticket T016 settles this.
+2. **Subscription endpoint details.** *Resolved:* the path is `POST /api/services/:id/subscribe`, and the user comes from the Bearer token. Still open: the endpoint for disconnect (required by §7.6; `doc.md` does not define it).
 3. **Widget catalog endpoint.** `TASKS.md` T019 names `GET /api/widgets` filtered by service. `doc.md` does not define it. Confirm the path and the query parameter.
 4. **Single widget endpoint.** Per-widget polling (§9.2) assumes `GET /dashboard/widgets/:id`. `doc.md` only defines the list endpoint. Add it to the API specification, or poll the list and derive each card's data from it.
 5. **RSS subscription.** `doc.md` UC4 says RSS "requires OAuth or a URL", but §6 makes the feed URL a widget parameter. Decide whether RSS needs a subscription step at all.
