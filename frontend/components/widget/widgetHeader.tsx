@@ -23,7 +23,7 @@ export default function WidgetHeader({
       <div className="flex items-center gap-2">
         <button
           type="button"
-          className="cursor-grab rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-white"
+          className="widget-drag-handle cursor-grab rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-white active:cursor-grabbing"
           aria-label="Move widget"
         >
           <GripVertical size={17} />
