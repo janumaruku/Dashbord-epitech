@@ -6,22 +6,32 @@ import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
 import WeatherIcon from "@/components/widget/weather/weatherIcon";
+import WeatherHourlyForecast from "@/components/widget/weather/weatherHourlyForecast";
 
-type WeatherSmallWidgetProps = {
+type WeatherMediumWidgetProps = {
   city: string;
   temperature: number;
   condition: string;
   weatherCode: number;
 };
 
-export default function WeatherSmallWidget({
+export default function WeatherMediumWidget({
   city,
   temperature,
   condition,
   weatherCode,
-}: WeatherSmallWidgetProps) {
+}: WeatherMediumWidgetProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const hourlyForecast = [
+    { time: "17:00", temperature: 18, weatherCode: 803 },
+    { time: "18:00", temperature: 17, weatherCode: 802 },
+    { time: "19:00", temperature: 17, weatherCode: 802 },
+    { time: "20:00", temperature: 16, weatherCode: 803 },
+    { time: "21:00", temperature: 15, weatherCode: 500 },
+    { time: "22:00", temperature: 14, weatherCode: 500 },
+  ];
 
   function configureWidget() {
     console.log("Configure widget");
@@ -56,14 +66,14 @@ export default function WeatherSmallWidget({
         onMenuOpenChange={setMenuOpen}
       />
 
-      <div className="flex-1 px-4 py-4">
-        <p className="text-base text-zinc-400">
-          {city}
-        </p>
+      <div className="flex flex-1 items-center px-4 py-3">
+        <div className="flex w-[180px] shrink-0 items-center justify-between pr-4">
+          <div>
+            <p className="text-base text-zinc-400">
+              {city}
+            </p>
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-3xl font-semibold">
+            <p className="mt-1 text-3xl font-semibold">
               {temperature}°C
             </p>
 
@@ -74,7 +84,15 @@ export default function WeatherSmallWidget({
 
           <WeatherIcon
             weatherCode={weatherCode}
-            size={78}
+            size={60}
+          />
+        </div>
+
+        <div className="h-full border-l border-zinc-800" />
+
+        <div className="min-w-0 flex-1 pl-4">
+          <WeatherHourlyForecast
+            forecast={hourlyForecast}
           />
         </div>
       </div>
