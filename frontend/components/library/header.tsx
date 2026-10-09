@@ -8,7 +8,7 @@ export default function Header() {
         href="/"
         className="rounded-md px-3 py-2 text-xl font-semibold hover:bg-zinc-700"
       >
-        Dashboard
+        My_Dashboard
       </Link>
       <div className="mr-2 flex item-center gap-8">
         <ProfileMenu />
