@@ -18,11 +18,11 @@ var ErrRefreshTokenNotFound = &dashborderrors.DashboardError{
 }
 
 type RefreshToken struct {
-	ID        string `gorm:"type:char(36);primaryKey"`
-	UserID    string `gorm:"type:char(36);not null"`
-	TokenHash string `gorm:"size:64;unique;not null"`
-	ExpiresAt time.Time
-	CreatedAt time.Time
+	ID        string    `gorm:"column:id;type:char(36);primaryKey"`
+	UserID    string    `gorm:"column:user_id;type:char(36);not null"`
+	TokenHash string    `gorm:"column:token_hash;size:64;unique;not null"`
+	ExpiresAt time.Time `gorm:"column:expires_at"`
+	CreatedAt time.Time `gorm:"column:created_at"`
 }
 
 func (r *RefreshToken) BeforeCreate(tx *gorm.DB) error {

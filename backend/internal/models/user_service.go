@@ -9,13 +9,13 @@ import (
 )
 
 type UserService struct {
-	ID                string `gorm:"type:char(36);primaryKey"`
-	UserID            string `gorm:"type:char(36);not null"`
-	ServiceID         string `gorm:"type:char(36);not null"`
-	Credentials       []byte `gorm:"type:varbinary(512)"`
-	OAuthToken        []byte `gorm:"type:varbinary(512)"`
-	OAuthRefreshToken []byte `gorm:"type:varbinary(512)"`
-	CreatedAt         time.Time
+	ID                string    `gorm:"column:id;type:char(36);primaryKey"`
+	UserID            string    `gorm:"column:user_id;type:char(36);not null"`
+	ServiceID         string    `gorm:"column:service_id;type:char(36);not null"`
+	Credentials       []byte    `gorm:"column:credentials;type:varbinary(512)"`
+	OAuthToken        []byte    `gorm:"column:oauth_token;type:varbinary(512)"`
+	OAuthRefreshToken []byte    `gorm:"column:oauth_refresh_token;type:varbinary(512)"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
 }
 
 func (us *UserService) BeforeCreate(tx *gorm.DB) error {

@@ -18,12 +18,12 @@ var ErrUserNotFound = &dashborderrors.DashboardError{
 }
 
 type User struct {
-	ID           string `gorm:"type:char(36);primaryKey"`
-	Username     string `gorm:"size:50;unique;not null"`
-	Email        string `gorm:"size:255;unique;not null"`
-	PasswordHash string `gorm:"size:255;not null" json:"-"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID           string    `gorm:"column:id;type:char(36);primaryKey"`
+	Username     string    `gorm:"column:username;size:50;unique;not null"`
+	Email        string    `gorm:"column:email;size:255;unique;not null"`
+	PasswordHash string    `gorm:"column:password_hash;size:255;not null" json:"-"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {
