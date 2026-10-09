@@ -30,11 +30,6 @@ func GenerateToken(userID string) (string, error) {
 	return token.SignedString([]byte(config.MustGetenv("JWT_SECRET")))
 }
 
-// ParseToken verifies a token's signature and expiry, returning the user
-// ID stored in its Subject claim. It explicitly checks that the token was
-// signed with HMAC before trusting it — without this, a forged token could
-// name a different algorithm (e.g. "none") and bypass verification
-// entirely, a well-known JWT attack class.
 func ParseToken(tokenString string) (string, error) {
 	claims := &jwt.RegisteredClaims{}
 

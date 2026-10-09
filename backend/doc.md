@@ -282,7 +282,7 @@ The user wants to enable access to a service in order to create widgets.
 
 **Main Scenario (Weather — No OAuth)**
 1. User clicks "Subscribe" on Weather
-2. Frontend POST /api/user-services/1/subscribe
+2. Frontend POST /api/services/:id/subscribe (Bearer token; the user comes from the token, not the body)
 3. Backend creates entry in user_services
 4. Weather widgets available immediately
 5. Redirect to Widgets page

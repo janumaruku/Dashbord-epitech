@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/middleware"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/usecases"
 )
@@ -13,12 +13,7 @@ import (
 func (app *App) ListServices(c *gin.Context) {
 	services, err := usecases.ListServices(app.DB)
 	if err != nil {
-		var dbErr *usecases.DBError
-		if errors.As(err, &dbErr) {
-			c.Error(&middleware.DBError{Err: dbErr.Err})
-		} else {
-			c.Error(&middleware.ServerError{Err: err})
-		}
+		c.Error(err)
 		return
 	}
 
@@ -28,4 +23,22 @@ func (app *App) ListServices(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, presenters)
+}
+
+func (app *App) Subscribe(c *gin.Context) {
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		c.Error(dashborderrors.ErrInternal)
+		return
+	}
+
+	serviceID := c.Param("id")
+
+	result, err := usecases.Subscribe(app.DB, session.UserID, serviceID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, NewSubscriptionPresenter(result))
 }

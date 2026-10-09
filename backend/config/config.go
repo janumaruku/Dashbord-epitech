@@ -18,11 +18,11 @@ func MySQLDSN() string {
 }
 
 func MustGetenv(key string) string {
-	v := os.Getenv(key)
+	envVar := os.Getenv(key)
 
-	if v == "" {
+	if envVar == "" {
 		log.Fatalf("missing required environment variable: %s", key)
 	}
 
-	return v
+	return envVar
 }

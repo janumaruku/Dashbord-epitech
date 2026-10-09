@@ -1,7 +1,7 @@
 # API Specification
 ## Epitech Dashboard Project
 
-**Source of truth for behaviour:** `backend/internal/handlers/` and `backend/internal/usecases/`. This document describes what the server does today. Where `backend/doc.md` describes something the server does not yet do, that is noted explicitly.
+**Source of truth for behaviour:** `backend/internal/handlers/`, `backend/internal/usecases/`, `backend/internal/models/`, `backend/internal/dashborderrors/`. This document describes what the server does today. Where `backend/doc.md` describes something the server does not yet do, that is noted explicitly.
 **Scope:** only the endpoints implemented so far. New endpoints are added here in the same change that implements them.
 **Frontend contract:** `FRONTEND_SPECIFICATION.md` §5 and §6 describe how the client consumes these responses.
 
@@ -45,33 +45,46 @@ Every error response, from every endpoint, has this shape:
 
 ```json
 {
-  "errors": [
-    { "code": "DASHBORD_ERROR", "messages": ["Username already taken"] }
-  ]
+  "code": "USERNAME_TAKEN",
+  "message": "Username already taken"
 }
 ```
 
-- `errors` is a list. Errors of the same `code` are grouped, so `messages` can contain more than one entry.
-- The HTTP status is the highest status among the grouped errors.
+There is exactly one error per response — if a request fails for more than one reason, only the first one found is returned. Internal details (SQL, stack traces, underlying library errors) are never included.
 
-| `code` | Meaning | Messages |
-|---|---|---|
-| `DASHBORD_ERROR` | Business rule or input problem | Specific, intended for the user |
-| `DB_ERROR` | Database failure | Generic: `A database error occurred`, or `This value already exists` for a duplicate key (status 409) |
-| `SERVER_ERROR` | Any other internal failure | Generic: `Internal server error` |
+Every `code` the server can return:
 
-Internal details (SQL, stack traces, underlying library errors) are never included in a response.
+| Code | Status | Message | Identified in |
+|---|---|---|---|
+| `INVALID_REQUEST_BODY` | 400 | Invalid request body | generic, any handler's JSON bind |
+| `INVALID_USERNAME` | 400 | Username must be 3-50 alphanumeric characters or underscores | usecases |
+| `INVALID_EMAIL` | 400 | Invalid email format | usecases |
+| `INVALID_PASSWORD` | 400 | Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character | usecases |
+| `USERNAME_TAKEN` | 409 | Username already taken | usecases |
+| `EMAIL_TAKEN` | 409 | Email already registered | usecases |
+| `INVALID_CREDENTIALS` | 401 | Invalid email or password | usecases |
+| `INVALID_REFRESH_TOKEN` | 401 | Invalid or expired refresh token | usecases |
+| `OAUTH_REQUIRED` | 400 | This service requires OAuth | usecases |
+| `ALREADY_SUBSCRIBED` | 409 | Already subscribed to this service | usecases |
+| `SERVICE_NOT_FOUND` | 404 | Service not found | models |
+| `DUPLICATE_ENTRY` | 409 | This value already exists | models (a unique-constraint violation the database itself raised) |
+| `MISSING_AUTH_HEADER` | 401 | Missing or invalid authorization header | middleware |
+| `INVALID_TOKEN` | 401 | Invalid or expired token | middleware |
+| `INTERNAL_SERVER_ERROR` | 500 | Internal server error | generic fallback — anything that isn't one of the codes above |
 
-**Unmatched routes** return Gin's default plain-text `404 page not found`, not the error envelope.
+Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNotFound`) but are never returned to a client directly — `POST /auth/login` and `POST /auth/refresh` always substitute `INVALID_CREDENTIALS`/`INVALID_REFRESH_TOKEN` instead, so a client can never tell "no such account" apart from "wrong password," or "token doesn't exist" apart from "token expired."
+
+**Unmatched routes** return Gin's default plain-text `404 page not found`, not the error shape above.
 
 ### 1.6 HTTP status codes used
 
 | Status | When |
 |---|---|
 | 200 | Successful read or token exchange |
-| 201 | Resource created (account registration) |
+| 201 | Resource created (account registration, subscription) |
 | 400 | Malformed body or failed input validation |
 | 401 | Missing, invalid, or expired credentials |
+| 404 | Resource with the given ID does not exist |
 | 409 | Conflict with existing data |
 | 500 | Internal or database failure |
 
@@ -88,6 +101,7 @@ Internal details (SQL, stack traces, underlying library errors) are never includ
 | POST | `/auth/login` | None | Implemented |
 | POST | `/auth/refresh` | None | Implemented |
 | GET | `/api/services` | Bearer | Implemented |
+| POST | `/api/services/:id/subscribe` | Bearer | Implemented |
 
 ---
 
@@ -147,17 +161,16 @@ The password and its hash are never returned.
 
 **Errors:**
 
-| Status | `code` | Message | Cause |
-|---|---|---|---|
-| 400 | `DASHBORD_ERROR` | `Invalid request body` | Body is not valid JSON or has the wrong types |
-| 400 | `DASHBORD_ERROR` | `Username must be 3-50 alphanumeric characters or underscores` | Username rule failed |
-| 400 | `DASHBORD_ERROR` | `Invalid email format` | Email rule failed |
-| 400 | `DASHBORD_ERROR` | `Password must contain at least 8 characters, including uppercase, lowercase, digit, and special character` | Password rule failed |
-| 409 | `DASHBORD_ERROR` | `Username already taken` | Username exists |
-| 409 | `DASHBORD_ERROR` | `Email already registered` | Email exists |
-| 409 | `DB_ERROR` | `This value already exists` | Duplicate key raised at insert time (race between check and insert) |
-| 500 | `DB_ERROR` | `A database error occurred` | Database failure |
-| 500 | `SERVER_ERROR` | `Internal server error` | Password hashing or token signing failed |
+| Status | `code` | Cause |
+|---|---|---|
+| 400 | `INVALID_REQUEST_BODY` | Body is not valid JSON or has the wrong types |
+| 400 | `INVALID_USERNAME` | Username rule failed |
+| 400 | `INVALID_EMAIL` | Email rule failed |
+| 400 | `INVALID_PASSWORD` | Password rule failed |
+| 409 | `USERNAME_TAKEN` | Username exists |
+| 409 | `EMAIL_TAKEN` | Email exists |
+| 409 | `DUPLICATE_ENTRY` | Race between the exists-checks and the insert — generic, since the database can't say which column collided |
+| 500 | `INTERNAL_SERVER_ERROR` | Any other failure (database, password hashing, token signing) |
 
 ---
 
@@ -197,12 +210,11 @@ Verifies credentials and returns tokens. Implements UC2.
 
 **Errors:**
 
-| Status | `code` | Message | Cause |
-|---|---|---|---|
-| 400 | `DASHBORD_ERROR` | `Invalid request body` | Malformed body |
-| 401 | `DASHBORD_ERROR` | `Invalid email or password` | Unknown email **or** wrong password. The two cases are deliberately indistinguishable. |
-| 500 | `DB_ERROR` | `A database error occurred` | Database failure |
-| 500 | `SERVER_ERROR` | `Internal server error` | Token signing failed |
+| Status | `code` | Cause |
+|---|---|---|
+| 400 | `INVALID_REQUEST_BODY` | Malformed body |
+| 401 | `INVALID_CREDENTIALS` | Unknown email **or** wrong password. The two cases are deliberately indistinguishable. |
+| 500 | `INTERNAL_SERVER_ERROR` | Any other failure |
 
 **Not implemented:** rate limiting (5 failed attempts per 15 minutes per IP, `doc.md` UC2). Tracked under ticket T039.
 
@@ -243,12 +255,11 @@ The response has no `user` object; the client already holds it from login.
 
 **Errors:**
 
-| Status | `code` | Message | Cause |
-|---|---|---|---|
-| 400 | `DASHBORD_ERROR` | `Invalid request body` | Malformed body |
-| 401 | `DASHBORD_ERROR` | `Invalid or expired refresh token` | Unknown, already rotated, or expired. The three cases are deliberately indistinguishable. |
-| 500 | `DB_ERROR` | `A database error occurred` | Database failure |
-| 500 | `SERVER_ERROR` | `Internal server error` | Token signing failed |
+| Status | `code` | Cause |
+|---|---|---|
+| 400 | `INVALID_REQUEST_BODY` | Malformed body |
+| 401 | `INVALID_REFRESH_TOKEN` | Unknown, already rotated, or expired. The three cases are deliberately indistinguishable. |
+| 500 | `INTERNAL_SERVER_ERROR` | Any other failure |
 
 **Known limitation:** creating the new token and deleting the old one are not wrapped in a database transaction. A failure between them can leave both tokens valid for a short time. Tracked for hardening.
 
@@ -300,11 +311,58 @@ The list is empty until the services are seeded (ticket T006).
 
 **Errors:**
 
-| Status | `code` | Message | Cause |
-|---|---|---|---|
-| 401 | `DASHBORD_ERROR` | `Missing or invalid authorization header` | No `Authorization` header, or it is not `Bearer <token>` |
-| 401 | `DASHBORD_ERROR` | `Invalid or expired token` | Token has a bad signature, is malformed, or has expired |
-| 500 | `DB_ERROR` | `A database error occurred` | Database failure |
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` | No `Authorization` header, or it is not `Bearer <token>` |
+| 401 | `INVALID_TOKEN` | Token has a bad signature, is malformed, or has expired |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
+### 2.7 POST `/api/services/:id/subscribe`
+
+Subscribes the authenticated user to a service that does not require OAuth (Weather and RSS). Implements UC4 for the non-OAuth path.
+
+**Auth:** `Bearer` access token required. The user is taken from the token's `sub` claim. The request must not include a user identifier.
+
+**Path parameter:**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | ID of the service, from `GET /api/services` |
+
+**Request:** no body.
+
+```
+POST /api/services/6f2c1e2a-8b1d-4c3e-9f7a-2d5b6c7e8f90/subscribe
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+**Response `201`:**
+
+```json
+{
+  "id": "c4e8a2f0-1b7d-4e6a-9c3f-8d2b5a1e7f60",
+  "service_id": "6f2c1e2a-8b1d-4c3e-9f7a-2d5b6c7e8f90",
+  "created_at": "2026-10-05T10:21:44Z"
+}
+```
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` | As §2.6 |
+| 401 | `INVALID_TOKEN` | As §2.6 |
+| 400 | `OAUTH_REQUIRED` | The service has `requires_auth = true`. Use the OAuth flow (ticket T016). |
+| 404 | `SERVICE_NOT_FOUND` | No service with this ID |
+| 409 | `ALREADY_SUBSCRIBED` | The user already has a subscription to this service (RG4) |
+| 409 | `DUPLICATE_ENTRY` | Race between the exists-check and the insert — generic, same reasoning as §2.3 |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+**Notes:**
+- A subscription has no credentials. The `user_services` row has `credentials`, `oauth_token` and `oauth_refresh_token` set to `NULL`.
+- The `UNIQUE (user_id, service_id)` constraint is the last line of defence against the exact same race `ALREADY_SUBSCRIBED` is meant to catch — it's what produces `DUPLICATE_ENTRY` instead, in the narrow window between the check and the insert.
 
 ---
 
@@ -313,3 +371,5 @@ The list is empty until the services are seeded (ticket T006).
 | Change | Ticket |
 |---|---|
 | Initial specification: `/about.json`, auth endpoints, `/api/services` | T008, T009, T010, T014 |
+| `POST /api/services/:id/subscribe` implemented, replacing the earlier `/api/user-services/:id/subscribe` path | T015 |
+| Error shape changed from a grouped `{"errors": [{"code", "messages": [...]}]}` envelope to a single flat `{"code", "message"}` object, and error codes became specific per failure instead of three generic categories | — |
