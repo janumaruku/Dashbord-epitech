@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/janumaruku/Dashbord-epitech/backend/internal/auth"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/dashborderrors"
 	"github.com/janumaruku/Dashbord-epitech/backend/internal/models"
 )
@@ -28,14 +29,10 @@ type SubscribeResult struct {
 	CreatedAt time.Time
 }
 
-func Subscribe(db *gorm.DB, userID, serviceID string) (*SubscribeResult, error) {
+func Subscribe(db *gorm.DB, userID, serviceID, code string) (*SubscribeResult, error) {
 	service, err := models.FindServiceByID(db, serviceID)
 	if err != nil {
 		return nil, err
-	}
-
-	if service.RequiresAuth {
-		return nil, ErrOAuthRequired
 	}
 
 	alreadySubscribed, err := models.UserServiceExists(db, userID, serviceID)
@@ -49,6 +46,24 @@ func Subscribe(db *gorm.DB, userID, serviceID string) (*SubscribeResult, error) 
 	us := models.UserService{
 		UserID:    userID,
 		ServiceID: serviceID,
+	}
+
+	if service.RequiresAuth {
+		if code == "" {
+			return nil, ErrOAuthRequired
+		}
+
+		accessToken, err := auth.ExchangeGitHubCode(code)
+		if err != nil {
+			return nil, err
+		}
+
+		encryptedToken, err := auth.Encrypt([]byte(accessToken))
+		if err != nil {
+			return nil, err
+		}
+
+		us.OAuthToken = encryptedToken
 	}
 
 	if err := models.CreateUserService(db, &us); err != nil {
