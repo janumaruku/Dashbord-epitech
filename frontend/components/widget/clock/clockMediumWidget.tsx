@@ -21,9 +21,8 @@ type ClockMediumWidgetProps = {
   widgetType: ClockWidgetType;
   timeFormat: ClockTimeFormat;
 
-  onConfigSave: (
-    config: ClockConfig
-  ) => void;
+  onConfigSave: (config: ClockConfig) => void;
+  onDelete: () => void;
 };
 
 type DigitBoxProps = {
@@ -50,32 +49,22 @@ export default function ClockMediumWidget({
   widgetType,
   timeFormat,
   onConfigSave,
+  onDelete,
 }: ClockMediumWidgetProps) {
-  const [menuOpen, setMenuOpen] =
-    useState(false);
-
-  const [deleteOpen, setDeleteOpen] =
-    useState(false);
-
-  const [configOpen, setConfigOpen] =
-    useState(false);
-
-  const [now, setNow] =
-    useState(new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const interval =
-      window.setInterval(
-        () => {
-          setNow(new Date());
-        },
-        1000
-      );
+      window.setInterval(() => {
+        setNow(new Date());
+      }, 1000);
 
-    return () =>
-      window.clearInterval(
-        interval
-      );
+    return () => {
+      window.clearInterval(interval);
+    };
   }, []);
 
   function openConfig() {
@@ -92,9 +81,7 @@ export default function ClockMediumWidget({
     setMenuOpen(true);
   }
 
-  function saveConfig(
-    config: ClockConfig
-  ) {
+  function saveConfig(config: ClockConfig) {
     onConfigSave(config);
     setConfigOpen(false);
   }
@@ -115,76 +102,55 @@ export default function ClockMediumWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log(
-      "Delete clock widget"
-    );
+    onDelete();
   }
 
   const timeParts =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12:
-          timeFormat === "12h",
-      }
-    ).formatToParts(now);
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: timeFormat === "12h",
+    }).formatToParts(now);
 
   const hours =
     timeParts.find(
-      (part) =>
-        part.type === "hour"
+      (part) => part.type === "hour"
     )?.value ?? "00";
 
   const minutes =
     timeParts.find(
-      (part) =>
-        part.type ===
-        "minute"
+      (part) => part.type === "minute"
     )?.value ?? "00";
 
   const seconds =
     timeParts.find(
-      (part) =>
-        part.type ===
-        "second"
+      (part) => part.type === "second"
     )?.value ?? "00";
 
   const dayPeriod =
     timeParts.find(
-      (part) =>
-        part.type ===
-        "dayPeriod"
+      (part) => part.type === "dayPeriod"
     )?.value ?? "";
 
   const formattedDate =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }
-    ).format(now);
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(now);
 
   const timeZoneLabel =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        timeZoneName: "short",
-      }
-    )
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      timeZoneName: "short",
+    })
       .formatToParts(now)
       .find(
         (part) =>
-          part.type ===
-          "timeZoneName"
+          part.type === "timeZoneName"
       )?.value ?? "";
 
   return (
@@ -192,18 +158,10 @@ export default function ClockMediumWidget({
       <div className="shrink-0">
         <WidgetHeader
           title="CLOCK"
-          onConfigure={
-            openConfig
-          }
-          onDelete={
-            openDeleteConfirm
-          }
-          menuOpen={
-            menuOpen
-          }
-          onMenuOpenChange={
-            setMenuOpen
-          }
+          onConfigure={openConfig}
+          onDelete={openDeleteConfirm}
+          menuOpen={menuOpen}
+          onMenuOpenChange={setMenuOpen}
         />
       </div>
 
@@ -216,45 +174,27 @@ export default function ClockMediumWidget({
         </p>
 
         <div className="flex w-full items-center justify-center gap-1 sm:gap-2">
-          <DigitBox
-            value={hours[0]}
-          />
-
-          <DigitBox
-            value={hours[1]}
-          />
+          <DigitBox value={hours[0]} />
+          <DigitBox value={hours[1]} />
 
           <span className="pb-1 text-xl font-semibold text-cyan-400 sm:text-3xl">
             :
           </span>
 
-          <DigitBox
-            value={minutes[0]}
-          />
-
-          <DigitBox
-            value={minutes[1]}
-          />
+          <DigitBox value={minutes[0]} />
+          <DigitBox value={minutes[1]} />
 
           <span className="pb-1 text-xl font-semibold text-cyan-400 sm:text-3xl">
             :
           </span>
 
-          <DigitBox
-            value={seconds[0]}
-          />
+          <DigitBox value={seconds[0]} />
+          <DigitBox value={seconds[1]} />
 
-          <DigitBox
-            value={seconds[1]}
-          />
-
-          {timeFormat ===
-            "12h" &&
+          {timeFormat === "12h" &&
             dayPeriod && (
               <span className="ml-1 text-xs font-medium text-zinc-400 sm:text-sm">
-                {
-                  dayPeriod
-                }
+                {dayPeriod}
               </span>
             )}
         </div>
@@ -275,38 +215,20 @@ export default function ClockMediumWidget({
       {configOpen && (
         <ClockConfigModal
           city={city}
-          timeZone={
-            timeZone
-          }
-          widgetType={
-            widgetType
-          }
-          timeFormat={
-            timeFormat
-          }
-          onBack={
-            backToMenuFromConfig
-          }
-          onClose={
-            closeConfig
-          }
-          onSave={
-            saveConfig
-          }
+          timeZone={timeZone}
+          widgetType={widgetType}
+          timeFormat={timeFormat}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
         />
       )}
 
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={
-            backToMenuFromDelete
-          }
-          onClose={
-            closeDeleteConfirm
-          }
-          onConfirm={
-            confirmDelete
-          }
+          onBack={backToMenuFromDelete}
+          onClose={closeDeleteConfirm}
+          onConfirm={confirmDelete}
         />
       )}
     </article>

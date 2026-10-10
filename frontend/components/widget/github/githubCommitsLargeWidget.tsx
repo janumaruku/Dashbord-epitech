@@ -6,6 +6,7 @@ import { GitCommitHorizontal } from "lucide-react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+
 import GithubConfigModal, {
   type GithubConfig,
   type GithubWidgetType,
@@ -26,7 +27,9 @@ type GithubCommitsLargeWidgetProps = {
 
   widgetType: GithubWidgetType;
   refreshRate: number;
+
   onConfigSave: (config: GithubConfig) => void;
+  onDelete: () => void;
 };
 
 export default function GithubCommitsLargeWidget({
@@ -36,6 +39,7 @@ export default function GithubCommitsLargeWidget({
   widgetType,
   refreshRate,
   onConfigSave,
+  onDelete,
 }: GithubCommitsLargeWidgetProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -76,8 +80,7 @@ export default function GithubCommitsLargeWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log("Delete GitHub widget");
+    onDelete();
   }
 
   return (

@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+
 import GithubConfigModal, {
   type GithubConfig,
   type GithubWidgetType,
@@ -25,7 +26,9 @@ type GithubLargeWidgetProps = {
 
   widgetType: GithubWidgetType;
   refreshRate: number;
+
   onConfigSave: (config: GithubConfig) => void;
+  onDelete: () => void;
 };
 
 export default function GithubLargeWidget({
@@ -34,6 +37,7 @@ export default function GithubLargeWidget({
   widgetType,
   refreshRate,
   onConfigSave,
+  onDelete,
 }: GithubLargeWidgetProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -74,8 +78,7 @@ export default function GithubLargeWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log("Delete GitHub widget");
+    onDelete();
   }
 
   function renderRepository(
@@ -135,14 +138,12 @@ export default function GithubLargeWidget({
           @{username} / Recent repositories
         </p>
 
-        {/* Mobile: 3 repositories */}
         <div className="divide-y divide-zinc-800 sm:hidden">
           {repositories
             .slice(0, 3)
             .map(renderRepository)}
         </div>
 
-        {/* Tablet / Desktop: 4 repositories */}
         <div className="hidden divide-y divide-zinc-800 sm:block">
           {repositories
             .slice(0, 4)
