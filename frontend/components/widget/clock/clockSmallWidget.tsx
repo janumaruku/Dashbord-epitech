@@ -21,9 +21,8 @@ type ClockSmallWidgetProps = {
   widgetType: ClockWidgetType;
   timeFormat: ClockTimeFormat;
 
-  onConfigSave: (
-    config: ClockConfig
-  ) => void;
+  onConfigSave: (config: ClockConfig) => void;
+  onDelete: () => void;
 };
 
 export default function ClockSmallWidget({
@@ -32,32 +31,22 @@ export default function ClockSmallWidget({
   widgetType,
   timeFormat,
   onConfigSave,
+  onDelete,
 }: ClockSmallWidgetProps) {
-  const [menuOpen, setMenuOpen] =
-    useState(false);
-
-  const [deleteOpen, setDeleteOpen] =
-    useState(false);
-
-  const [configOpen, setConfigOpen] =
-    useState(false);
-
-  const [now, setNow] =
-    useState(new Date());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const interval =
-      window.setInterval(
-        () => {
-          setNow(new Date());
-        },
-        1000
-      );
+      window.setInterval(() => {
+        setNow(new Date());
+      }, 1000);
 
-    return () =>
-      window.clearInterval(
-        interval
-      );
+    return () => {
+      window.clearInterval(interval);
+    };
   }, []);
 
   function openConfig() {
@@ -74,9 +63,7 @@ export default function ClockSmallWidget({
     setMenuOpen(true);
   }
 
-  function saveConfig(
-    config: ClockConfig
-  ) {
+  function saveConfig(config: ClockConfig) {
     onConfigSave(config);
     setConfigOpen(false);
   }
@@ -97,43 +84,33 @@ export default function ClockSmallWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log(
-      "Delete clock widget"
-    );
+    onDelete();
   }
 
   const timeParts =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12:
-          timeFormat === "12h",
-      }
-    ).formatToParts(now);
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: timeFormat === "12h",
+    }).formatToParts(now);
 
   const hours = Number(
     timeParts.find(
-      (part) =>
-        part.type === "hour"
+      (part) => part.type === "hour"
     )?.value ?? 0
   );
 
   const minutes = Number(
     timeParts.find(
-      (part) =>
-        part.type === "minute"
+      (part) => part.type === "minute"
     )?.value ?? 0
   );
 
   const seconds = Number(
     timeParts.find(
-      (part) =>
-        part.type === "second"
+      (part) => part.type === "second"
     )?.value ?? 0
   );
 
@@ -150,29 +127,22 @@ export default function ClockSmallWidget({
     seconds * 6;
 
   const formattedDate =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      }
-    ).format(now);
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(now);
 
   const timeZoneLabel =
-    new Intl.DateTimeFormat(
-      "en-GB",
-      {
-        timeZone,
-        timeZoneName: "short",
-      }
-    )
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      timeZoneName: "short",
+    })
       .formatToParts(now)
       .find(
         (part) =>
-          part.type ===
-          "timeZoneName"
+          part.type === "timeZoneName"
       )?.value ?? "";
 
   return (
@@ -180,18 +150,10 @@ export default function ClockSmallWidget({
       <div className="shrink-0">
         <WidgetHeader
           title="CLOCK"
-          onConfigure={
-            openConfig
-          }
-          onDelete={
-            openDeleteConfirm
-          }
-          menuOpen={
-            menuOpen
-          }
-          onMenuOpenChange={
-            setMenuOpen
-          }
+          onConfigure={openConfig}
+          onDelete={openDeleteConfirm}
+          menuOpen={menuOpen}
+          onMenuOpenChange={setMenuOpen}
         />
       </div>
 
@@ -206,26 +168,21 @@ export default function ClockSmallWidget({
         <div className="relative aspect-square w-24 shrink-0 rounded-full bg-zinc-800">
           {Array.from({
             length: 12,
-          }).map(
-            (_, index) => {
-              const angle =
-                index * 30;
+          }).map((_, index) => {
+            const angle = index * 30;
 
-              return (
-                <div
-                  key={
-                    index
-                  }
-                  className="absolute left-1/2 top-1/2 h-full w-px"
-                  style={{
-                    transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-                  }}
-                >
-                  <div className="mx-auto mt-1.5 h-1 w-1 rounded-full bg-zinc-600" />
-                </div>
-              );
-            }
-          )}
+            return (
+              <div
+                key={index}
+                className="absolute left-1/2 top-1/2 h-full w-px"
+                style={{
+                  transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+                }}
+              >
+                <div className="mx-auto mt-1.5 h-1 w-1 rounded-full bg-zinc-600" />
+              </div>
+            );
+          })}
 
           <div
             className="absolute left-1/2 top-1/2 h-[2px] w-[34%] origin-left rounded-full bg-zinc-100"
@@ -267,38 +224,20 @@ export default function ClockSmallWidget({
       {configOpen && (
         <ClockConfigModal
           city={city}
-          timeZone={
-            timeZone
-          }
-          widgetType={
-            widgetType
-          }
-          timeFormat={
-            timeFormat
-          }
-          onBack={
-            backToMenuFromConfig
-          }
-          onClose={
-            closeConfig
-          }
-          onSave={
-            saveConfig
-          }
+          timeZone={timeZone}
+          widgetType={widgetType}
+          timeFormat={timeFormat}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
         />
       )}
 
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={
-            backToMenuFromDelete
-          }
-          onClose={
-            closeDeleteConfirm
-          }
-          onConfirm={
-            confirmDelete
-          }
+          onBack={backToMenuFromDelete}
+          onClose={closeDeleteConfirm}
+          onConfirm={confirmDelete}
         />
       )}
     </article>

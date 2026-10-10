@@ -27,6 +27,7 @@ type WeatherLargeWidgetProps = {
   refreshRate: number;
 
   onConfigSave: (config: WeatherConfig) => void;
+  onDelete: () => void;
 };
 
 type HourlyWeather = {
@@ -43,36 +44,12 @@ type DailyWeather = {
 };
 
 const hourlyForecast: HourlyWeather[] = [
-  {
-    time: "17:00",
-    temperature: 18,
-    weatherCode: 803,
-  },
-  {
-    time: "18:00",
-    temperature: 17,
-    weatherCode: 803,
-  },
-  {
-    time: "19:00",
-    temperature: 16,
-    weatherCode: 802,
-  },
-  {
-    time: "20:00",
-    temperature: 15,
-    weatherCode: 802,
-  },
-  {
-    time: "21:00",
-    temperature: 14,
-    weatherCode: 801,
-  },
-  {
-    time: "22:00",
-    temperature: 13,
-    weatherCode: 800,
-  },
+  { time: "17:00", temperature: 18, weatherCode: 803 },
+  { time: "18:00", temperature: 17, weatherCode: 803 },
+  { time: "19:00", temperature: 16, weatherCode: 802 },
+  { time: "20:00", temperature: 15, weatherCode: 802 },
+  { time: "21:00", temperature: 14, weatherCode: 801 },
+  { time: "22:00", temperature: 13, weatherCode: 800 },
 ];
 
 const dailyForecast: DailyWeather[] = [
@@ -128,16 +105,16 @@ export default function WeatherLargeWidget({
   unit,
   refreshRate,
   onConfigSave,
+  onDelete,
 }: WeatherLargeWidgetProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
 
-  const displayedTemperature =
-    convertTemperature(
-      temperature,
-      unit
-    );
+  const displayedTemperature = convertTemperature(
+    temperature,
+    unit
+  );
 
   const unitSymbol =
     unit === "celsius" ? "C" : "F";
@@ -154,16 +131,14 @@ export default function WeatherLargeWidget({
   const convertedDailyForecast =
     dailyForecast.map((day) => ({
       ...day,
-      minTemperature:
-        convertTemperature(
-          day.minTemperature,
-          unit
-        ),
-      maxTemperature:
-        convertTemperature(
-          day.maxTemperature,
-          unit
-        ),
+      minTemperature: convertTemperature(
+        day.minTemperature,
+        unit
+      ),
+      maxTemperature: convertTemperature(
+        day.maxTemperature,
+        unit
+      ),
     }));
 
   function openConfig() {
@@ -201,8 +176,7 @@ export default function WeatherLargeWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log("Delete weather widget");
+    onDelete();
   }
 
   return (
@@ -225,8 +199,7 @@ export default function WeatherLargeWidget({
             </p>
 
             <p className="mt-1 text-4xl font-semibold">
-              {displayedTemperature}°
-              {unitSymbol}
+              {displayedTemperature}°{unitSymbol}
             </p>
 
             <p className="mt-1 truncate text-sm text-zinc-500">

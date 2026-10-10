@@ -24,6 +24,7 @@ type WeatherSmallWidgetProps = {
   refreshRate: number;
 
   onConfigSave: (config: WeatherConfig) => void;
+  onDelete: () => void;
 };
 
 function convertTemperature(
@@ -46,6 +47,7 @@ export default function WeatherSmallWidget({
   unit,
   refreshRate,
   onConfigSave,
+  onDelete,
 }: WeatherSmallWidgetProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -94,8 +96,7 @@ export default function WeatherSmallWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-
-    console.log("Delete weather widget");
+    onDelete();
   }
 
   return (
@@ -117,8 +118,7 @@ export default function WeatherSmallWidget({
           </p>
 
           <p className="mt-1 text-4xl font-semibold">
-            {displayedTemperature}°
-            {unitSymbol}
+            {displayedTemperature}°{unitSymbol}
           </p>
 
           <p className="mt-1 truncate text-sm text-zinc-500">

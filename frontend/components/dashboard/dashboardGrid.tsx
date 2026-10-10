@@ -1,6 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import {
   Responsive,
@@ -36,6 +40,10 @@ import type {
   ClockWidgetType,
 } from "@/components/widget/clock/clockConfigModal";
 
+import type {
+  NewWidgetConfig,
+} from "@/components/dashboard/addWidgetModal";
+
 type WeatherWidgetState = {
   id: string;
   city: string;
@@ -69,6 +77,13 @@ type DashboardBreakpoint =
   | "tabletPortrait"
   | "mobile";
 
+const breakpoints: DashboardBreakpoint[] = [
+  "desktop",
+  "tabletLandscape",
+  "tabletPortrait",
+  "mobile",
+];
+
 const breakpointColumns: Record<
   DashboardBreakpoint,
   number
@@ -79,76 +94,57 @@ const breakpointColumns: Record<
   mobile: 1,
 };
 
-const breakpoints: DashboardBreakpoint[] = [
-  "desktop",
-  "tabletLandscape",
-  "tabletPortrait",
-  "mobile",
+const initialWeatherWidgets: WeatherWidgetState[] = [
+  {
+    id: "weather-paris",
+    city: "Paris",
+    temperature: 18,
+    condition: "Cloudy",
+    weatherCode: 803,
+    widgetType: "current",
+    unit: "celsius",
+    refreshRate: 5,
+  },
 ];
 
-const initialWeatherWidgets: WeatherWidgetState[] =
-  [
-    {
-      id: "weather-paris",
-      city: "Paris",
-      temperature: 18,
-      condition: "Cloudy",
-      weatherCode: 803,
-      widgetType:
-        "current",
-      unit: "celsius",
-      refreshRate: 5,
-    },
-  ];
+const initialGithubWidgets: GithubWidgetState[] = [
+  {
+    id: "github-profile",
+    widgetType: "profile",
+    username: "alice_01",
+    refreshRate: 5,
+  },
+  {
+    id: "github-repositories",
+    widgetType: "repositories",
+    username: "alice_01",
+    refreshRate: 5,
+  },
+  {
+    id: "github-commits",
+    widgetType: "commits",
+    username: "alice_01",
+    refreshRate: 5,
+    repository: "epitech-dashboard",
+  },
+];
 
-const initialGithubWidgets: GithubWidgetState[] =
-  [
-    {
-      id: "github-profile",
-      widgetType:
-        "profile",
-      username: "alice_01",
-      refreshRate: 5,
-    },
-    {
-      id: "github-repositories",
-      widgetType:
-        "repositories",
-      username: "alice_01",
-      refreshRate: 5,
-    },
-    {
-      id: "github-commits",
-      widgetType:
-        "commits",
-      username: "alice_01",
-      refreshRate: 5,
-      repository:
-        "epitech-dashboard",
-    },
-  ];
-
-const initialClockWidgets: ClockWidgetState[] =
-  [
-    {
-      id: "clock-analog-paris",
-      city: "Paris",
-      timeZone:
-        "Europe/Paris",
-      widgetType:
-        "analog",
-      timeFormat: "24h",
-    },
-    {
-      id: "clock-digital-paris",
-      city: "Paris",
-      timeZone:
-        "Europe/Paris",
-      widgetType:
-        "digital",
-      timeFormat: "24h",
-    },
-  ];
+const initialClockWidgets: ClockWidgetState[] = [
+  {
+    id: "clock-analog-paris",
+    city: "Paris",
+    timeZone: "Europe/Paris",
+    widgetType: "analog",
+    timeFormat: "24h",
+  },
+  {
+    id: "clock-digital-paris",
+    city: "Paris",
+    timeZone: "Europe/Paris",
+    widgetType: "digital",
+    timeFormat: "24h",
+  },
+];
 
 const repositories = [
   {
@@ -190,8 +186,7 @@ const commits = [
     message:
       "Add responsive widget layouts",
     author: "alice_01",
-    timeAgo:
-      "12 minutes ago",
+    timeAgo: "12 minutes ago",
     hash: "a92d4f1",
     url: "https://github.com/alice_01/epitech-dashboard/commit/a92d4f1",
   },
@@ -199,8 +194,7 @@ const commits = [
     message:
       "Improve service error messages",
     author: "alice_01",
-    timeAgo:
-      "38 minutes ago",
+    timeAgo: "38 minutes ago",
     hash: "7bc203e",
     url: "https://github.com/alice_01/epitech-dashboard/commit/7bc203e",
   },
@@ -208,8 +202,7 @@ const commits = [
     message:
       "Add RSS feed validation",
     author: "alice_01",
-    timeAgo:
-      "2 hours ago",
+    timeAgo: "2 hours ago",
     hash: "19e65c8",
     url: "https://github.com/alice_01/epitech-dashboard/commit/19e65c8",
   },
@@ -217,215 +210,207 @@ const commits = [
     message:
       "Refactor dashboard widget components",
     author: "alice_01",
-    timeAgo:
-      "4 hours ago",
+    timeAgo: "4 hours ago",
     hash: "c84f912",
     url: "https://github.com/alice_01/epitech-dashboard/commit/c84f912",
   },
 ];
 
-const initialLayouts: ResponsiveLayouts =
-  {
-    desktop: [
-      {
-        i: "weather-paris",
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-profile",
-        x: 1,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-repositories",
-        x: 2,
-        y: 0,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "github-commits",
-        x: 4,
-        y: 0,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "clock-analog-paris",
-        x: 0,
-        y: 4,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "clock-digital-paris",
-        x: 0,
-        y: 8,
-        w: 2,
-        h: 4,
-      },
-    ],
+const initialLayouts: ResponsiveLayouts = {
+  desktop: [
+    {
+      i: "weather-paris",
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-profile",
+      x: 1,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 2,
+      y: 0,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 4,
+      y: 0,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "clock-analog-paris",
+      x: 0,
+      y: 4,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "clock-digital-paris",
+      x: 0,
+      y: 8,
+      w: 2,
+      h: 4,
+    },
+  ],
 
-    tabletLandscape: [
-      {
-        i: "weather-paris",
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-profile",
-        x: 1,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-repositories",
-        x: 2,
-        y: 0,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "github-commits",
-        x: 0,
-        y: 4,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "clock-analog-paris",
-        x: 2,
-        y: 8,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "clock-digital-paris",
-        x: 0,
-        y: 12,
-        w: 2,
-        h: 4,
-      },
-    ],
+  tabletLandscape: [
+    {
+      i: "weather-paris",
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-profile",
+      x: 1,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 2,
+      y: 0,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 4,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "clock-analog-paris",
+      x: 2,
+      y: 8,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "clock-digital-paris",
+      x: 0,
+      y: 12,
+      w: 2,
+      h: 4,
+    },
+  ],
 
-    tabletPortrait: [
-      {
-        i: "weather-paris",
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-profile",
-        x: 1,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-repositories",
-        x: 0,
-        y: 4,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "github-commits",
-        x: 0,
-        y: 12,
-        w: 2,
-        h: 8,
-      },
-      {
-        i: "clock-analog-paris",
-        x: 0,
-        y: 20,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "clock-digital-paris",
-        x: 0,
-        y: 24,
-        w: 2,
-        h: 4,
-      },
-    ],
+  tabletPortrait: [
+    {
+      i: "weather-paris",
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-profile",
+      x: 1,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 0,
+      y: 4,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 12,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "clock-analog-paris",
+      x: 0,
+      y: 20,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "clock-digital-paris",
+      x: 0,
+      y: 24,
+      w: 2,
+      h: 4,
+    },
+  ],
 
-    mobile: [
-      {
-        i: "weather-paris",
-        x: 0,
-        y: 0,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-profile",
-        x: 0,
-        y: 4,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "github-repositories",
-        x: 0,
-        y: 8,
-        w: 1,
-        h: 8,
-      },
-      {
-        i: "github-commits",
-        x: 0,
-        y: 16,
-        w: 1,
-        h: 8,
-      },
-      {
-        i: "clock-analog-paris",
-        x: 0,
-        y: 24,
-        w: 1,
-        h: 4,
-      },
-      {
-        i: "clock-digital-paris",
-        x: 0,
-        y: 28,
-        w: 1,
-        h: 5,
-      },
-    ],
-  };
+  mobile: [
+    {
+      i: "weather-paris",
+      x: 0,
+      y: 0,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-profile",
+      x: 0,
+      y: 4,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 0,
+      y: 8,
+      w: 1,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 16,
+      w: 1,
+      h: 8,
+    },
+    {
+      i: "clock-analog-paris",
+      x: 0,
+      y: 24,
+      w: 1,
+      h: 4,
+    },
+    {
+      i: "clock-digital-paris",
+      x: 0,
+      y: 28,
+      w: 1,
+      h: 5,
+    },
+  ],
+};
 
 function getWeatherGridSize(
   widgetType: WeatherWidgetType,
   breakpoint: DashboardBreakpoint
 ) {
-  if (
-    widgetType === "current"
-  ) {
+  if (widgetType === "current") {
     return {
       w: 1,
       h: 4,
     };
   }
 
-  if (
-    widgetType === "hourly"
-  ) {
-    if (
-      breakpoint === "mobile"
-    ) {
+  if (widgetType === "hourly") {
+    if (breakpoint === "mobile") {
       return {
         w: 1,
         h: 7,
@@ -438,9 +423,7 @@ function getWeatherGridSize(
     };
   }
 
-  if (
-    breakpoint === "mobile"
-  ) {
+  if (breakpoint === "mobile") {
     return {
       w: 1,
       h: 8,
@@ -457,18 +440,14 @@ function getGithubGridSize(
   widgetType: GithubWidgetType,
   breakpoint: DashboardBreakpoint
 ) {
-  if (
-    widgetType === "profile"
-  ) {
+  if (widgetType === "profile") {
     return {
       w: 1,
       h: 4,
     };
   }
 
-  if (
-    breakpoint === "mobile"
-  ) {
+  if (breakpoint === "mobile") {
     return {
       w: 1,
       h: 8,
@@ -485,18 +464,14 @@ function getClockGridSize(
   widgetType: ClockWidgetType,
   breakpoint: DashboardBreakpoint
 ) {
-  if (
-    widgetType === "analog"
-  ) {
+  if (widgetType === "analog") {
     return {
       w: 1,
       h: 4,
     };
   }
 
-  if (
-    breakpoint === "mobile"
-  ) {
+  if (breakpoint === "mobile") {
     return {
       w: 1,
       h: 5,
@@ -507,6 +482,14 @@ function getClockGridSize(
     w: 2,
     h: 4,
   };
+}
+
+function createWidgetId(
+  service: string
+) {
+  return `${service}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}`;
 }
 
 export default function DashboardGrid() {
@@ -548,15 +531,375 @@ export default function DashboardGrid() {
     initialWidth: 1400,
   });
 
+  const removeWidgetFromLayouts =
+    useCallback(
+      (
+        widgetId: string
+      ) => {
+        setLayouts(
+          (
+            currentLayouts
+          ) => {
+            const nextLayouts: ResponsiveLayouts =
+              {
+                ...currentLayouts,
+              };
+
+            for (
+              const breakpoint
+              of breakpoints
+            ) {
+              const currentLayout =
+                currentLayouts[
+                  breakpoint
+                ];
+
+              if (
+                !currentLayout
+              ) {
+                continue;
+              }
+
+              nextLayouts[
+                breakpoint
+              ] =
+                currentLayout.filter(
+                  (item) =>
+                    item.i !==
+                    widgetId
+                );
+            }
+
+            return nextLayouts;
+          }
+        );
+      },
+      []
+    );
+
+  function deleteWeatherWidget(
+    widgetId: string
+  ) {
+    setWeatherWidgets(
+      (
+        currentWidgets
+      ) =>
+        currentWidgets.filter(
+          (widget) =>
+            widget.id !==
+            widgetId
+        )
+    );
+
+    removeWidgetFromLayouts(
+      widgetId
+    );
+  }
+
+  function deleteGithubWidget(
+    widgetId: string
+  ) {
+    setGithubWidgets(
+      (
+        currentWidgets
+      ) =>
+        currentWidgets.filter(
+          (widget) =>
+            widget.id !==
+            widgetId
+        )
+    );
+
+    removeWidgetFromLayouts(
+      widgetId
+    );
+  }
+
+  function deleteClockWidget(
+    widgetId: string
+  ) {
+    setClockWidgets(
+      (
+        currentWidgets
+      ) =>
+        currentWidgets.filter(
+          (widget) =>
+            widget.id !==
+            widgetId
+        )
+    );
+
+    removeWidgetFromLayouts(
+      widgetId
+    );
+  }
+
+  const addLayoutItem =
+    useCallback(
+      (
+        widgetId: string,
+        getSize: (
+          breakpoint: DashboardBreakpoint
+        ) => {
+          w: number;
+          h: number;
+        }
+      ) => {
+        setLayouts(
+          (
+            currentLayouts
+          ) => {
+            const nextLayouts: ResponsiveLayouts =
+              {
+                ...currentLayouts,
+              };
+
+            for (
+              const breakpoint
+              of breakpoints
+            ) {
+              const currentLayout =
+                currentLayouts[
+                  breakpoint
+                ] ?? [];
+
+              const {
+                w,
+                h,
+              } =
+                getSize(
+                  breakpoint
+                );
+
+              const columnCount =
+                breakpointColumns[
+                  breakpoint
+                ];
+
+              nextLayouts[
+                breakpoint
+              ] = [
+                ...currentLayout,
+                {
+                  i: widgetId,
+                  x: 0,
+                  y: Infinity,
+                  w: Math.min(
+                    w,
+                    columnCount
+                  ),
+                  h,
+                },
+              ];
+            }
+
+            return nextLayouts;
+          }
+        );
+      },
+      []
+    );
+
+  const addWidget =
+    useCallback(
+      (
+        config: NewWidgetConfig
+      ) => {
+        if (
+          config.service ===
+          "weather"
+        ) {
+          const widgetType =
+            config.widgetType as WeatherWidgetType;
+
+          const widgetId =
+            createWidgetId(
+              "weather"
+            );
+
+          const newWidget: WeatherWidgetState =
+            {
+              id: widgetId,
+              city:
+                config.city ??
+                "Paris",
+              temperature: 18,
+              condition:
+                "Cloudy",
+              weatherCode: 803,
+              widgetType,
+              unit:
+                config.unit ??
+                "celsius",
+              refreshRate:
+                config.refreshRate ??
+                5,
+            };
+
+          setWeatherWidgets(
+            (
+              currentWidgets
+            ) => [
+              ...currentWidgets,
+              newWidget,
+            ]
+          );
+
+          addLayoutItem(
+            widgetId,
+            (
+              breakpoint
+            ) =>
+              getWeatherGridSize(
+                widgetType,
+                breakpoint
+              )
+          );
+
+          return;
+        }
+
+        if (
+          config.service ===
+          "github"
+        ) {
+          const widgetType =
+            config.widgetType as GithubWidgetType;
+
+          const widgetId =
+            createWidgetId(
+              "github"
+            );
+
+          const newWidget: GithubWidgetState =
+            {
+              id: widgetId,
+              widgetType,
+              username:
+                config.username ??
+                "alice_01",
+              refreshRate:
+                config.refreshRate ??
+                5,
+              repository:
+                widgetType ===
+                "commits"
+                  ? config.repository ??
+                    "epitech-dashboard"
+                  : undefined,
+            };
+
+          setGithubWidgets(
+            (
+              currentWidgets
+            ) => [
+              ...currentWidgets,
+              newWidget,
+            ]
+          );
+
+          addLayoutItem(
+            widgetId,
+            (
+              breakpoint
+            ) =>
+              getGithubGridSize(
+                widgetType,
+                breakpoint
+              )
+          );
+
+          return;
+        }
+
+        if (
+          config.service ===
+          "clock"
+        ) {
+          const widgetType =
+            config.widgetType as ClockWidgetType;
+
+          const widgetId =
+            createWidgetId(
+              "clock"
+            );
+
+          const newWidget: ClockWidgetState =
+            {
+              id: widgetId,
+              city:
+                config.city ??
+                "Paris",
+              timeZone:
+                config.timeZone ??
+                "Europe/Paris",
+              widgetType,
+              timeFormat:
+                config.timeFormat ??
+                "24h",
+            };
+
+          setClockWidgets(
+            (
+              currentWidgets
+            ) => [
+              ...currentWidgets,
+              newWidget,
+            ]
+          );
+
+          addLayoutItem(
+            widgetId,
+            (
+              breakpoint
+            ) =>
+              getClockGridSize(
+                widgetType,
+                breakpoint
+              )
+          );
+        }
+      },
+      [addLayoutItem]
+    );
+
+  useEffect(() => {
+    function handleAddWidgetEvent(
+      event: Event
+    ) {
+      const customEvent =
+        event as CustomEvent<NewWidgetConfig>;
+
+      addWidget(
+        customEvent.detail
+      );
+    }
+
+    window.addEventListener(
+      "dashboard:add-widget",
+      handleAddWidgetEvent
+    );
+
+    return () => {
+      window.removeEventListener(
+        "dashboard:add-widget",
+        handleAddWidgetEvent
+      );
+    };
+  }, [addWidget]);
+
   function updateWeatherConfig(
     widgetId: string,
     config: WeatherConfig
   ) {
     setWeatherWidgets(
-      (currentWidgets) =>
+      (
+        currentWidgets
+      ) =>
         currentWidgets.map(
           (widget) =>
-            widget.id === widgetId
+            widget.id ===
+            widgetId
               ? {
                   ...widget,
                   city:
@@ -573,7 +916,9 @@ export default function DashboardGrid() {
     );
 
     setLayouts(
-      (currentLayouts) => {
+      (
+        currentLayouts
+      ) => {
         const nextLayouts: ResponsiveLayouts =
           {
             ...currentLayouts,
@@ -588,11 +933,16 @@ export default function DashboardGrid() {
               breakpoint
             ];
 
-          if (!currentLayout) {
+          if (
+            !currentLayout
+          ) {
             continue;
           }
 
-          const { w, h } =
+          const {
+            w,
+            h,
+          } =
             getWeatherGridSize(
               config.widgetType,
               breakpoint
@@ -605,30 +955,31 @@ export default function DashboardGrid() {
 
           nextLayouts[
             breakpoint
-          ] = currentLayout.map(
-            (item) => {
-              if (
-                item.i !==
-                widgetId
-              ) {
-                return item;
-              }
+          ] =
+            currentLayout.map(
+              (item) => {
+                if (
+                  item.i !==
+                  widgetId
+                ) {
+                  return item;
+                }
 
-              return {
-                ...item,
-                w,
-                h,
-                x: Math.min(
-                  item.x,
-                  Math.max(
-                    0,
-                    columnCount -
-                      w
-                  )
-                ),
-              };
-            }
-          );
+                return {
+                  ...item,
+                  w,
+                  h,
+                  x: Math.min(
+                    item.x,
+                    Math.max(
+                      0,
+                      columnCount -
+                        w
+                    )
+                  ),
+                };
+              }
+            );
         }
 
         return nextLayouts;
@@ -641,10 +992,13 @@ export default function DashboardGrid() {
     config: GithubConfig
   ) {
     setGithubWidgets(
-      (currentWidgets) =>
+      (
+        currentWidgets
+      ) =>
         currentWidgets.map(
           (widget) =>
-            widget.id === widgetId
+            widget.id ===
+            widgetId
               ? {
                   ...widget,
                   widgetType:
@@ -659,7 +1013,9 @@ export default function DashboardGrid() {
     );
 
     setLayouts(
-      (currentLayouts) => {
+      (
+        currentLayouts
+      ) => {
         const nextLayouts: ResponsiveLayouts =
           {
             ...currentLayouts,
@@ -674,11 +1030,16 @@ export default function DashboardGrid() {
               breakpoint
             ];
 
-          if (!currentLayout) {
+          if (
+            !currentLayout
+          ) {
             continue;
           }
 
-          const { w, h } =
+          const {
+            w,
+            h,
+          } =
             getGithubGridSize(
               config.widgetType,
               breakpoint
@@ -691,30 +1052,31 @@ export default function DashboardGrid() {
 
           nextLayouts[
             breakpoint
-          ] = currentLayout.map(
-            (item) => {
-              if (
-                item.i !==
-                widgetId
-              ) {
-                return item;
-              }
+          ] =
+            currentLayout.map(
+              (item) => {
+                if (
+                  item.i !==
+                  widgetId
+                ) {
+                  return item;
+                }
 
-              return {
-                ...item,
-                w,
-                h,
-                x: Math.min(
-                  item.x,
-                  Math.max(
-                    0,
-                    columnCount -
-                      w
-                  )
-                ),
-              };
-            }
-          );
+                return {
+                  ...item,
+                  w,
+                  h,
+                  x: Math.min(
+                    item.x,
+                    Math.max(
+                      0,
+                      columnCount -
+                        w
+                    )
+                  ),
+                };
+              }
+            );
         }
 
         return nextLayouts;
@@ -727,10 +1089,13 @@ export default function DashboardGrid() {
     config: ClockConfig
   ) {
     setClockWidgets(
-      (currentWidgets) =>
+      (
+        currentWidgets
+      ) =>
         currentWidgets.map(
           (widget) =>
-            widget.id === widgetId
+            widget.id ===
+            widgetId
               ? {
                   ...widget,
                   city:
@@ -747,7 +1112,9 @@ export default function DashboardGrid() {
     );
 
     setLayouts(
-      (currentLayouts) => {
+      (
+        currentLayouts
+      ) => {
         const nextLayouts: ResponsiveLayouts =
           {
             ...currentLayouts,
@@ -762,11 +1129,16 @@ export default function DashboardGrid() {
               breakpoint
             ];
 
-          if (!currentLayout) {
+          if (
+            !currentLayout
+          ) {
             continue;
           }
 
-          const { w, h } =
+          const {
+            w,
+            h,
+          } =
             getClockGridSize(
               config.widgetType,
               breakpoint
@@ -779,30 +1151,31 @@ export default function DashboardGrid() {
 
           nextLayouts[
             breakpoint
-          ] = currentLayout.map(
-            (item) => {
-              if (
-                item.i !==
-                widgetId
-              ) {
-                return item;
-              }
+          ] =
+            currentLayout.map(
+              (item) => {
+                if (
+                  item.i !==
+                  widgetId
+                ) {
+                  return item;
+                }
 
-              return {
-                ...item,
-                w,
-                h,
-                x: Math.min(
-                  item.x,
-                  Math.max(
-                    0,
-                    columnCount -
-                      w
-                  )
-                ),
-              };
-            }
-          );
+                return {
+                  ...item,
+                  w,
+                  h,
+                  x: Math.min(
+                    item.x,
+                    Math.max(
+                      0,
+                      columnCount -
+                        w
+                    )
+                  ),
+                };
+              }
+            );
         }
 
         return nextLayouts;
@@ -833,6 +1206,11 @@ export default function DashboardGrid() {
         updateWeatherConfig(
           widget.id,
           config
+        ),
+
+      onDelete: () =>
+        deleteWeatherWidget(
+          widget.id
         ),
     };
 
@@ -882,6 +1260,11 @@ export default function DashboardGrid() {
         updateGithubConfig(
           widget.id,
           config
+        ),
+
+      onDelete: () =>
+        deleteGithubWidget(
+          widget.id
         ),
     };
 
@@ -943,6 +1326,11 @@ export default function DashboardGrid() {
         updateClockConfig(
           widget.id,
           config
+        ),
+
+      onDelete: () =>
+        deleteClockWidget(
+          widget.id
         ),
     };
 
@@ -1011,9 +1399,7 @@ export default function DashboardGrid() {
           {weatherWidgets.map(
             (widget) => (
               <div
-                key={
-                  widget.id
-                }
+                key={widget.id}
                 className="h-full w-full"
               >
                 {renderWeatherWidget(
@@ -1026,9 +1412,7 @@ export default function DashboardGrid() {
           {githubWidgets.map(
             (widget) => (
               <div
-                key={
-                  widget.id
-                }
+                key={widget.id}
                 className="h-full w-full"
               >
                 {renderGithubWidget(
@@ -1041,9 +1425,7 @@ export default function DashboardGrid() {
           {clockWidgets.map(
             (widget) => (
               <div
-                key={
-                  widget.id
-                }
+                key={widget.id}
                 className="h-full w-full"
               >
                 {renderClockWidget(
