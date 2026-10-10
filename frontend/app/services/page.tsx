@@ -6,10 +6,10 @@ export default function ServicesPage() {
     <main className="min-h-screen bg-black text-white">
       <Header />
 
-      <div className="flex min-h-[calc(100vh-73px)]">
+      <div className="xl:flex">
         <SideBar />
 
-        <div className="flex-1 p-6">
+        <div className="min-w-0 flex-1 p-4 sm:p-6">
           <h1 className="text-2xl font-semibold">
             Services
           </h1>

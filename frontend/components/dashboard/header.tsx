@@ -1,6 +1,7 @@
+"use client";
+
 import Link from "next/link";
 import ProfileMenu from "@/components/dashboard/profileMenu";
-import AddWidgetButton from "@/components/dashboard/addWidget";
 
 export default function Header() {
   return (
@@ -11,8 +12,8 @@ export default function Header() {
       >
         My_Dashboard
       </Link>
-      <div className="mr-2 flex item-center gap-8">
-        <AddWidgetButton />
+
+      <div className="mr-2 flex items-center">
         <ProfileMenu />
       </div>
     </header>

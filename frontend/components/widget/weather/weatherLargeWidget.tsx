@@ -5,6 +5,12 @@ import { useState } from "react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+
+import WeatherConfigModal, {
+  type WeatherConfig,
+  type TemperatureUnit,
+} from "@/components/widget/weather/weatherConfigModal";
+
 import WeatherIcon from "@/components/widget/weather/weatherIcon";
 import WeatherHourlyForecast from "@/components/widget/weather/weatherHourlyForecast";
 import WeatherDailyForecast from "@/components/widget/weather/weatherDailyForecast";
@@ -14,16 +20,40 @@ type WeatherLargeWidgetProps = {
   temperature: number;
   condition: string;
   weatherCode: number;
+  unit: TemperatureUnit;
+  refreshRate: number;
+  onConfigSave: (config: WeatherConfig) => void;
 };
+
+function convertTemperature(
+  celsius: number,
+  unit: TemperatureUnit
+) {
+  if (unit === "fahrenheit") {
+    return Math.round((celsius * 9) / 5 + 32);
+  }
+
+  return celsius;
+}
 
 export default function WeatherLargeWidget({
   city,
   temperature,
   condition,
   weatherCode,
+  unit,
+  refreshRate,
+  onConfigSave,
 }: WeatherLargeWidgetProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const displayedTemperature =
+    convertTemperature(temperature, unit);
+
+  const unitSymbol =
+    unit === "celsius" ? "C" : "F";
 
   const hourlyForecast = [
     { time: "17:00", temperature: 18, weatherCode: 803 },
@@ -32,18 +62,74 @@ export default function WeatherLargeWidget({
     { time: "20:00", temperature: 16, weatherCode: 803 },
     { time: "21:00", temperature: 15, weatherCode: 500 },
     { time: "22:00", temperature: 14, weatherCode: 500 },
-  ];
+  ].map((hour) => ({
+    ...hour,
+    temperature: convertTemperature(
+      hour.temperature,
+      unit
+    ),
+  }));
 
   const dailyForecast = [
-    { day: "Sat", minTemperature: 13, maxTemperature: 20, weatherCode: 801 },
-    { day: "Sun", minTemperature: 11, maxTemperature: 17, weatherCode: 500 },
-    { day: "Mon", minTemperature: 10, maxTemperature: 18, weatherCode: 803 },
-    { day: "Tue", minTemperature: 12, maxTemperature: 22, weatherCode: 800 },
-    { day: "Wed", minTemperature: 14, maxTemperature: 23, weatherCode: 801 },
-  ];
+    {
+      day: "Sat",
+      minTemperature: 13,
+      maxTemperature: 20,
+      weatherCode: 801,
+    },
+    {
+      day: "Sun",
+      minTemperature: 11,
+      maxTemperature: 17,
+      weatherCode: 500,
+    },
+    {
+      day: "Mon",
+      minTemperature: 10,
+      maxTemperature: 18,
+      weatherCode: 803,
+    },
+    {
+      day: "Tue",
+      minTemperature: 12,
+      maxTemperature: 22,
+      weatherCode: 800,
+    },
+    {
+      day: "Wed",
+      minTemperature: 14,
+      maxTemperature: 23,
+      weatherCode: 801,
+    },
+  ].map((day) => ({
+    ...day,
+    minTemperature: convertTemperature(
+      day.minTemperature,
+      unit
+    ),
+    maxTemperature: convertTemperature(
+      day.maxTemperature,
+      unit
+    ),
+  }));
 
-  function configureWidget() {
-    console.log("Configure widget");
+  function openConfig() {
+    setMenuOpen(false);
+    setConfigOpen(true);
+  }
+
+  function closeConfig() {
+    setConfigOpen(false);
+  }
+
+  function backToMenuFromConfig() {
+    setConfigOpen(false);
+    setMenuOpen(true);
+  }
+
+  function saveConfig(config: WeatherConfig) {
+    onConfigSave(config);
+    setConfigOpen(false);
   }
 
   function openDeleteConfirm() {
@@ -55,7 +141,7 @@ export default function WeatherLargeWidget({
     setDeleteOpen(false);
   }
 
-  function backToMenu() {
+  function backToMenuFromDelete() {
     setDeleteOpen(false);
     setMenuOpen(true);
   }
@@ -69,7 +155,7 @@ export default function WeatherLargeWidget({
     <article className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 text-white">
       <WidgetHeader
         title="WEATHER"
-        onConfigure={configureWidget}
+        onConfigure={openConfig}
         onDelete={openDeleteConfirm}
         menuOpen={menuOpen}
         onMenuOpenChange={setMenuOpen}
@@ -83,7 +169,7 @@ export default function WeatherLargeWidget({
             </p>
 
             <p className="mt-1 text-3xl font-semibold">
-              {temperature}°C
+              {displayedTemperature}°{unitSymbol}
             </p>
 
             <p className="mt-1 text-base text-zinc-400">
@@ -118,9 +204,21 @@ export default function WeatherLargeWidget({
         sourceName="OpenWeather"
       />
 
+      {configOpen && (
+        <WeatherConfigModal
+          city={city}
+          size="large"
+          unit={unit}
+          refreshRate={refreshRate}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
+        />
+      )}
+
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={backToMenu}
+          onBack={backToMenuFromDelete}
           onClose={closeDeleteConfirm}
           onConfirm={confirmDelete}
         />
