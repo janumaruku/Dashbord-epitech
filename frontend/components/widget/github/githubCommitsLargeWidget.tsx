@@ -6,6 +6,10 @@ import { GitCommitHorizontal } from "lucide-react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+import GithubConfigModal, {
+  type GithubConfig,
+  type GithubWidgetType,
+} from "@/components/widget/github/githubConfigModal";
 
 type GithubCommit = {
   message: string;
@@ -19,18 +23,41 @@ type GithubCommitsLargeWidgetProps = {
   username: string;
   repository: string;
   commits: GithubCommit[];
+
+  widgetType: GithubWidgetType;
+  refreshRate: number;
+  onConfigSave: (config: GithubConfig) => void;
 };
 
 export default function GithubCommitsLargeWidget({
   username,
   repository,
   commits,
+  widgetType,
+  refreshRate,
+  onConfigSave,
 }: GithubCommitsLargeWidgetProps) {
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
 
-  function configureWidget() {
-    console.log("Configure GitHub commits widget");
+  function openConfig() {
+    setMenuOpen(false);
+    setConfigOpen(true);
+  }
+
+  function closeConfig() {
+    setConfigOpen(false);
+  }
+
+  function backToMenuFromConfig() {
+    setConfigOpen(false);
+    setMenuOpen(true);
+  }
+
+  function saveConfig(config: GithubConfig) {
+    onConfigSave(config);
+    setConfigOpen(false);
   }
 
   function openDeleteConfirm() {
@@ -42,7 +69,7 @@ export default function GithubCommitsLargeWidget({
     setDeleteOpen(false);
   }
 
-  function backToMenu() {
+  function backToMenuFromDelete() {
     setDeleteOpen(false);
     setMenuOpen(true);
   }
@@ -50,7 +77,7 @@ export default function GithubCommitsLargeWidget({
   function confirmDelete() {
     setDeleteOpen(false);
 
-    console.log("Delete GitHub commits widget");
+    console.log("Delete GitHub widget");
   }
 
   return (
@@ -58,7 +85,7 @@ export default function GithubCommitsLargeWidget({
       <div className="shrink-0">
         <WidgetHeader
           title="GITHUB"
-          onConfigure={configureWidget}
+          onConfigure={openConfig}
           onDelete={openDeleteConfirm}
           menuOpen={menuOpen}
           onMenuOpenChange={setMenuOpen}
@@ -114,9 +141,21 @@ export default function GithubCommitsLargeWidget({
         />
       </div>
 
+      {configOpen && (
+        <GithubConfigModal
+          widgetType={widgetType}
+          refreshRate={refreshRate}
+          repository={repository}
+          username={username}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
+        />
+      )}
+
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={backToMenu}
+          onBack={backToMenuFromDelete}
           onClose={closeDeleteConfirm}
           onConfirm={confirmDelete}
         />

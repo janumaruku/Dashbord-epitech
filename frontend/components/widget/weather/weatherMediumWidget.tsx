@@ -2,27 +2,70 @@
 
 import { useState } from "react";
 
+import WeatherIcon from "@/components/widget/weather/weatherIcon";
+import WeatherHourlyForecast from "@/components/widget/weather/weatherHourlyForecast";
+
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
 
 import WeatherConfigModal, {
   type WeatherConfig,
+  type WeatherWidgetType,
   type TemperatureUnit,
 } from "@/components/widget/weather/weatherConfigModal";
-
-import WeatherIcon from "@/components/widget/weather/weatherIcon";
-import WeatherHourlyForecast from "@/components/widget/weather/weatherHourlyForecast";
 
 type WeatherMediumWidgetProps = {
   city: string;
   temperature: number;
   condition: string;
   weatherCode: number;
+
+  widgetType: WeatherWidgetType;
   unit: TemperatureUnit;
   refreshRate: number;
+
   onConfigSave: (config: WeatherConfig) => void;
 };
+
+type HourlyWeather = {
+  time: string;
+  temperature: number;
+  weatherCode: number;
+};
+
+const hourlyForecast: HourlyWeather[] = [
+  {
+    time: "17:00",
+    temperature: 18,
+    weatherCode: 803,
+  },
+  {
+    time: "18:00",
+    temperature: 17,
+    weatherCode: 803,
+  },
+  {
+    time: "19:00",
+    temperature: 16,
+    weatherCode: 802,
+  },
+  {
+    time: "20:00",
+    temperature: 15,
+    weatherCode: 802,
+  },
+  {
+    time: "21:00",
+    temperature: 14,
+    weatherCode: 801,
+  },
+  {
+    time: "22:00",
+    temperature: 13,
+    weatherCode: 800,
+  },
+];
 
 function convertTemperature(
   celsius: number,
@@ -32,7 +75,7 @@ function convertTemperature(
     return Math.round((celsius * 9) / 5 + 32);
   }
 
-  return celsius;
+  return Math.round(celsius);
 }
 
 export default function WeatherMediumWidget({
@@ -40,34 +83,32 @@ export default function WeatherMediumWidget({
   temperature,
   condition,
   weatherCode,
+  widgetType,
   unit,
   refreshRate,
   onConfigSave,
 }: WeatherMediumWidgetProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const displayedTemperature =
-    convertTemperature(temperature, unit);
+    convertTemperature(
+      temperature,
+      unit
+    );
 
   const unitSymbol =
     unit === "celsius" ? "C" : "F";
 
-  const hourlyForecast = [
-    { time: "17:00", temperature: 18, weatherCode: 803 },
-    { time: "18:00", temperature: 17, weatherCode: 802 },
-    { time: "19:00", temperature: 17, weatherCode: 802 },
-    { time: "20:00", temperature: 16, weatherCode: 803 },
-    { time: "21:00", temperature: 15, weatherCode: 500 },
-    { time: "22:00", temperature: 14, weatherCode: 500 },
-  ].map((hour) => ({
-    ...hour,
-    temperature: convertTemperature(
-      hour.temperature,
-      unit
-    ),
-  }));
+  const convertedHourlyForecast =
+    hourlyForecast.map((hour) => ({
+      ...hour,
+      temperature: convertTemperature(
+        hour.temperature,
+        unit
+      ),
+    }));
 
   function openConfig() {
     setMenuOpen(false);
@@ -104,7 +145,8 @@ export default function WeatherMediumWidget({
 
   function confirmDelete() {
     setDeleteOpen(false);
-    console.log("Delete widget");
+
+    console.log("Delete weather widget");
   }
 
   return (
@@ -121,23 +163,24 @@ export default function WeatherMediumWidget({
 
       <div className="flex min-h-0 flex-1 flex-col px-4 py-2 md:flex-row md:items-center">
         <div className="flex shrink-0 items-center justify-between md:w-[180px] md:pr-4">
-          <div>
-            <p className="text-base text-zinc-400">
+          <div className="min-w-0">
+            <p className="truncate text-sm text-zinc-400">
               {city}
             </p>
 
-            <p className="text-3xl font-semibold">
-              {displayedTemperature}°{unitSymbol}
+            <p className="mt-1 text-3xl font-semibold">
+              {displayedTemperature}°
+              {unitSymbol}
             </p>
 
-            <p className="text-sm text-zinc-400">
+            <p className="mt-1 truncate text-sm text-zinc-500">
               {condition}
             </p>
           </div>
 
           <WeatherIcon
             weatherCode={weatherCode}
-            size={54}
+            size={56}
           />
         </div>
 
@@ -145,7 +188,7 @@ export default function WeatherMediumWidget({
 
         <div className="flex min-h-0 min-w-0 flex-1 items-center md:pl-4">
           <WeatherHourlyForecast
-            forecast={hourlyForecast}
+            forecast={convertedHourlyForecast}
           />
         </div>
       </div>
@@ -153,7 +196,7 @@ export default function WeatherMediumWidget({
       <div className="shrink-0">
         <WidgetFooter
           lastUpdated="3 min ago"
-          sourceUrl="https://openweathermap.org"
+          sourceUrl="https://openweathermap.org/"
           sourceName="OpenWeather"
         />
       </div>
@@ -161,7 +204,7 @@ export default function WeatherMediumWidget({
       {configOpen && (
         <WeatherConfigModal
           city={city}
-          size="medium"
+          widgetType={widgetType}
           unit={unit}
           refreshRate={refreshRate}
           onBack={backToMenuFromConfig}

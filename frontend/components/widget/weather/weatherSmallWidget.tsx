@@ -2,24 +2,27 @@
 
 import { useState } from "react";
 
+import WeatherIcon from "@/components/widget/weather/weatherIcon";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
 
 import WeatherConfigModal, {
   type WeatherConfig,
+  type WeatherWidgetType,
   type TemperatureUnit,
 } from "@/components/widget/weather/weatherConfigModal";
-
-import WeatherIcon from "@/components/widget/weather/weatherIcon";
 
 type WeatherSmallWidgetProps = {
   city: string;
   temperature: number;
   condition: string;
   weatherCode: number;
+
+  widgetType: WeatherWidgetType;
   unit: TemperatureUnit;
   refreshRate: number;
+
   onConfigSave: (config: WeatherConfig) => void;
 };
 
@@ -31,7 +34,7 @@ function convertTemperature(
     return Math.round((celsius * 9) / 5 + 32);
   }
 
-  return celsius;
+  return Math.round(celsius);
 }
 
 export default function WeatherSmallWidget({
@@ -39,16 +42,19 @@ export default function WeatherSmallWidget({
   temperature,
   condition,
   weatherCode,
+  widgetType,
   unit,
   refreshRate,
   onConfigSave,
 }: WeatherSmallWidgetProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [configOpen, setConfigOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  const displayedTemperature =
-    convertTemperature(temperature, unit);
+  const displayedTemperature = convertTemperature(
+    temperature,
+    unit
+  );
 
   const unitSymbol =
     unit === "celsius" ? "C" : "F";
@@ -89,52 +95,57 @@ export default function WeatherSmallWidget({
   function confirmDelete() {
     setDeleteOpen(false);
 
-    console.log("Delete widget");
+    console.log("Delete weather widget");
   }
 
   return (
     <article className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 text-white">
-      <WidgetHeader
-        title="WEATHER"
-        onConfigure={openConfig}
-        onDelete={openDeleteConfirm}
-        menuOpen={menuOpen}
-        onMenuOpenChange={setMenuOpen}
-      />
+      <div className="shrink-0">
+        <WidgetHeader
+          title="WEATHER"
+          onConfigure={openConfig}
+          onDelete={openDeleteConfirm}
+          menuOpen={menuOpen}
+          onMenuOpenChange={setMenuOpen}
+        />
+      </div>
 
-      <div className="flex-1 px-4 py-4">
-        <p className="text-base text-zinc-400">
-          {city}
-        </p>
+      <div className="flex min-h-0 flex-1 items-center justify-between px-4 py-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm text-zinc-400">
+            {city}
+          </p>
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="min-w-0">
-            <p className="text-3xl font-semibold">
-              {displayedTemperature}°{unitSymbol}
-            </p>
+          <p className="mt-1 text-4xl font-semibold">
+            {displayedTemperature}°
+            {unitSymbol}
+          </p>
 
-            <p className="mt-1 whitespace-nowrap text-base text-zinc-400">
-              {condition}
-            </p>
-          </div>
+          <p className="mt-1 truncate text-sm text-zinc-500">
+            {condition}
+          </p>
+        </div>
 
+        <div className="shrink-0">
           <WeatherIcon
             weatherCode={weatherCode}
-            size={78}
+            size={72}
           />
         </div>
       </div>
 
-      <WidgetFooter
-        lastUpdated="3 min ago"
-        sourceUrl="https://openweathermap.org"
-        sourceName="OpenWeather"
-      />
+      <div className="shrink-0">
+        <WidgetFooter
+          lastUpdated="3 min ago"
+          sourceUrl="https://openweathermap.org/"
+          sourceName="OpenWeather"
+        />
+      </div>
 
       {configOpen && (
         <WeatherConfigModal
           city={city}
-          size="small"
+          widgetType={widgetType}
           unit={unit}
           refreshRate={refreshRate}
           onBack={backToMenuFromConfig}

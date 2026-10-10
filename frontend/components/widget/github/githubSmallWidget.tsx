@@ -5,12 +5,20 @@ import { useState } from "react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+import GithubConfigModal, {
+  type GithubConfig,
+  type GithubWidgetType,
+} from "@/components/widget/github/githubConfigModal";
 
 type GithubSmallWidgetProps = {
   name: string;
   username: string;
   followers: number;
   publicRepos: number;
+
+  widgetType: GithubWidgetType;
+  refreshRate: number;
+  onConfigSave: (config: GithubConfig) => void;
 };
 
 export default function GithubSmallWidget({
@@ -18,12 +26,31 @@ export default function GithubSmallWidget({
   username,
   followers,
   publicRepos,
+  widgetType,
+  refreshRate,
+  onConfigSave,
 }: GithubSmallWidgetProps) {
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
 
-  function configureWidget() {
-    console.log("Configure GitHub widget");
+  function openConfig() {
+    setMenuOpen(false);
+    setConfigOpen(true);
+  }
+
+  function closeConfig() {
+    setConfigOpen(false);
+  }
+
+  function backToMenuFromConfig() {
+    setConfigOpen(false);
+    setMenuOpen(true);
+  }
+
+  function saveConfig(config: GithubConfig) {
+    onConfigSave(config);
+    setConfigOpen(false);
   }
 
   function openDeleteConfirm() {
@@ -35,7 +62,7 @@ export default function GithubSmallWidget({
     setDeleteOpen(false);
   }
 
-  function backToMenu() {
+  function backToMenuFromDelete() {
     setDeleteOpen(false);
     setMenuOpen(true);
   }
@@ -44,9 +71,6 @@ export default function GithubSmallWidget({
     setDeleteOpen(false);
 
     console.log("Delete GitHub widget");
-
-    // Plus tard :
-    // appel backend pour supprimer le widget
   }
 
   return (
@@ -54,7 +78,7 @@ export default function GithubSmallWidget({
       <div className="shrink-0">
         <WidgetHeader
           title="GITHUB"
-          onConfigure={configureWidget}
+          onConfigure={openConfig}
           onDelete={openDeleteConfirm}
           menuOpen={menuOpen}
           onMenuOpenChange={setMenuOpen}
@@ -63,16 +87,16 @@ export default function GithubSmallWidget({
 
       <div className="flex min-h-0 flex-1 flex-col px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-300 text-xl font-semibold text-zinc-900">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-violet-300 text-xl font-semibold text-zinc-950">
             {name.charAt(0).toUpperCase()}
           </div>
 
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-white">
+            <p className="truncate text-lg font-semibold">
               {name}
             </p>
 
-            <p className="mt-0.5 truncate text-sm text-zinc-500">
+            <p className="truncate text-sm text-zinc-500">
               @{username}
             </p>
           </div>
@@ -80,21 +104,21 @@ export default function GithubSmallWidget({
 
         <div className="mt-auto grid grid-cols-2 gap-4 pt-3">
           <div>
-            <p className="text-2xl font-semibold text-white">
+            <p className="text-2xl font-semibold">
               {followers}
             </p>
 
-            <p className="mt-0.5 text-sm text-zinc-500">
+            <p className="text-xs text-zinc-500">
               Followers
             </p>
           </div>
 
           <div>
-            <p className="text-2xl font-semibold text-white">
+            <p className="text-2xl font-semibold">
               {publicRepos}
             </p>
 
-            <p className="mt-0.5 text-sm text-zinc-500">
+            <p className="text-xs text-zinc-500">
               Repos
             </p>
           </div>
@@ -109,9 +133,20 @@ export default function GithubSmallWidget({
         />
       </div>
 
+      {configOpen && (
+        <GithubConfigModal
+          widgetType={widgetType}
+          refreshRate={refreshRate}
+          username={username}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
+        />
+      )}
+
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={backToMenu}
+          onBack={backToMenuFromDelete}
           onClose={closeDeleteConfirm}
           onConfirm={confirmDelete}
         />
