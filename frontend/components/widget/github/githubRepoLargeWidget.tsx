@@ -6,6 +6,10 @@ import { Star } from "lucide-react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+import GithubConfigModal, {
+  type GithubConfig,
+  type GithubWidgetType,
+} from "@/components/widget/github/githubConfigModal";
 
 type GithubRepository = {
   name: string;
@@ -18,17 +22,40 @@ type GithubRepository = {
 type GithubLargeWidgetProps = {
   username: string;
   repositories: GithubRepository[];
+
+  widgetType: GithubWidgetType;
+  refreshRate: number;
+  onConfigSave: (config: GithubConfig) => void;
 };
 
 export default function GithubLargeWidget({
   username,
   repositories,
+  widgetType,
+  refreshRate,
+  onConfigSave,
 }: GithubLargeWidgetProps) {
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
 
-  function configureWidget() {
-    console.log("Configure GitHub widget");
+  function openConfig() {
+    setMenuOpen(false);
+    setConfigOpen(true);
+  }
+
+  function closeConfig() {
+    setConfigOpen(false);
+  }
+
+  function backToMenuFromConfig() {
+    setConfigOpen(false);
+    setMenuOpen(true);
+  }
+
+  function saveConfig(config: GithubConfig) {
+    onConfigSave(config);
+    setConfigOpen(false);
   }
 
   function openDeleteConfirm() {
@@ -40,7 +67,7 @@ export default function GithubLargeWidget({
     setDeleteOpen(false);
   }
 
-  function backToMenu() {
+  function backToMenuFromDelete() {
     setDeleteOpen(false);
     setMenuOpen(true);
   }
@@ -51,7 +78,9 @@ export default function GithubLargeWidget({
     console.log("Delete GitHub widget");
   }
 
-  function renderRepository(repository: GithubRepository) {
+  function renderRepository(
+    repository: GithubRepository
+  ) {
     return (
       <div
         key={repository.name}
@@ -94,7 +123,7 @@ export default function GithubLargeWidget({
       <div className="shrink-0">
         <WidgetHeader
           title="GITHUB"
-          onConfigure={configureWidget}
+          onConfigure={openConfig}
           onDelete={openDeleteConfirm}
           menuOpen={menuOpen}
           onMenuOpenChange={setMenuOpen}
@@ -129,9 +158,20 @@ export default function GithubLargeWidget({
         />
       </div>
 
+      {configOpen && (
+        <GithubConfigModal
+          widgetType={widgetType}
+          refreshRate={refreshRate}
+          username={username}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
+        />
+      )}
+
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={backToMenu}
+          onBack={backToMenuFromDelete}
           onClose={closeDeleteConfirm}
           onConfirm={confirmDelete}
         />
