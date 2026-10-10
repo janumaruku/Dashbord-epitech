@@ -1,33 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
+
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import {
+  ServiceProvider,
+} from "@/components/services/serviceContext";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Customizable dashboard",
+  title: "My Dashboard",
+  description:
+    "A customizable dashboard with weather, GitHub, and clock widgets.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="flex min-h-full flex-col">
-        {children}
+    <html lang="en">
+      <body className="min-h-screen bg-zinc-950 text-white">
+        <ServiceProvider>
+          {children}
+        </ServiceProvider>
       </body>
     </html>
   );
