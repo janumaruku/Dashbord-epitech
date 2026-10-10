@@ -14,24 +14,24 @@ export default function WeatherHourlyForecast({
   forecast,
 }: WeatherHourlyForecastProps) {
   return (
-    <div className="grid grid-cols-6">
+    <div className="grid w-full grid-cols-6 gap-1">
       {forecast.map((hour) => (
         <div
           key={hour.time}
-          className="flex flex-col items-center"
+          className="flex min-w-0 flex-col items-center justify-center"
         >
-          <p className="text-xs text-zinc-500">
+          <p className="whitespace-nowrap text-[10px] text-zinc-500 sm:text-xs">
             {hour.time}
           </p>
 
-          <div className="my-1">
+          <div className="my-0.5">
             <WeatherIcon
               weatherCode={hour.weatherCode}
-              size={26}
+              size={22}
             />
           </div>
 
-          <p className="text-sm font-medium">
+          <p className="text-xs font-medium sm:text-sm">
             {hour.temperature}°
           </p>
         </div>

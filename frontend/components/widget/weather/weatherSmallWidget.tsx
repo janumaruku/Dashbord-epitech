@@ -5,6 +5,12 @@ import { useState } from "react";
 import WidgetHeader from "@/components/widget/widgetHeader";
 import WidgetFooter from "@/components/widget/widgetFooter";
 import WidgetDeleteConfirm from "@/components/widget/widgetDeleteConfirm";
+
+import WeatherConfigModal, {
+  type WeatherConfig,
+  type TemperatureUnit,
+} from "@/components/widget/weather/weatherConfigModal";
+
 import WeatherIcon from "@/components/widget/weather/weatherIcon";
 
 type WeatherSmallWidgetProps = {
@@ -12,19 +18,58 @@ type WeatherSmallWidgetProps = {
   temperature: number;
   condition: string;
   weatherCode: number;
+  unit: TemperatureUnit;
+  refreshRate: number;
+  onConfigSave: (config: WeatherConfig) => void;
 };
+
+function convertTemperature(
+  celsius: number,
+  unit: TemperatureUnit
+) {
+  if (unit === "fahrenheit") {
+    return Math.round((celsius * 9) / 5 + 32);
+  }
+
+  return celsius;
+}
 
 export default function WeatherSmallWidget({
   city,
   temperature,
   condition,
   weatherCode,
+  unit,
+  refreshRate,
+  onConfigSave,
 }: WeatherSmallWidgetProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function configureWidget() {
-    console.log("Configure widget");
+  const displayedTemperature =
+    convertTemperature(temperature, unit);
+
+  const unitSymbol =
+    unit === "celsius" ? "C" : "F";
+
+  function openConfig() {
+    setMenuOpen(false);
+    setConfigOpen(true);
+  }
+
+  function closeConfig() {
+    setConfigOpen(false);
+  }
+
+  function backToMenuFromConfig() {
+    setConfigOpen(false);
+    setMenuOpen(true);
+  }
+
+  function saveConfig(config: WeatherConfig) {
+    onConfigSave(config);
+    setConfigOpen(false);
   }
 
   function openDeleteConfirm() {
@@ -36,13 +81,14 @@ export default function WeatherSmallWidget({
     setDeleteOpen(false);
   }
 
-  function backToMenu() {
+  function backToMenuFromDelete() {
     setDeleteOpen(false);
     setMenuOpen(true);
   }
 
   function confirmDelete() {
     setDeleteOpen(false);
+
     console.log("Delete widget");
   }
 
@@ -50,7 +96,7 @@ export default function WeatherSmallWidget({
     <article className="flex h-full w-full flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 text-white">
       <WidgetHeader
         title="WEATHER"
-        onConfigure={configureWidget}
+        onConfigure={openConfig}
         onDelete={openDeleteConfirm}
         menuOpen={menuOpen}
         onMenuOpenChange={setMenuOpen}
@@ -64,7 +110,7 @@ export default function WeatherSmallWidget({
         <div className="mt-4 flex items-center justify-between">
           <div className="min-w-0">
             <p className="text-3xl font-semibold">
-              {temperature}°C
+              {displayedTemperature}°{unitSymbol}
             </p>
 
             <p className="mt-1 whitespace-nowrap text-base text-zinc-400">
@@ -85,9 +131,21 @@ export default function WeatherSmallWidget({
         sourceName="OpenWeather"
       />
 
+      {configOpen && (
+        <WeatherConfigModal
+          city={city}
+          size="small"
+          unit={unit}
+          refreshRate={refreshRate}
+          onBack={backToMenuFromConfig}
+          onClose={closeConfig}
+          onSave={saveConfig}
+        />
+      )}
+
       {deleteOpen && (
         <WidgetDeleteConfirm
-          onBack={backToMenu}
+          onBack={backToMenuFromDelete}
           onClose={closeDeleteConfirm}
           onConfirm={confirmDelete}
         />
