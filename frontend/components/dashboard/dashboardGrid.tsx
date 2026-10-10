@@ -13,6 +13,7 @@ import WeatherLargeWidget from "@/components/widget/weather/weatherLargeWidget";
 
 import GithubSmallWidget from "@/components/widget/github/githubSmallWidget";
 import GithubLargeWidget from "@/components/widget/github/githubRepoLargeWidget";
+import GithubCommitsLargeWidget from "@/components/widget/github/githubCommitsLargeWidget";
 
 import type {
   WeatherConfig,
@@ -90,6 +91,13 @@ const initialLayouts: ResponsiveLayouts = {
       w: 2,
       h: 8,
     },
+    {
+      i: "github-commits",
+      x: 4,
+      y: 0,
+      w: 2,
+      h: 8,
+    },
   ],
 
   tabletLandscape: [
@@ -111,6 +119,13 @@ const initialLayouts: ResponsiveLayouts = {
       i: "github-repositories",
       x: 2,
       y: 0,
+      w: 2,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 4,
       w: 2,
       h: 8,
     },
@@ -138,6 +153,13 @@ const initialLayouts: ResponsiveLayouts = {
       w: 2,
       h: 8,
     },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 12,
+      w: 2,
+      h: 8,
+    },
   ],
 
   mobile: [
@@ -159,6 +181,13 @@ const initialLayouts: ResponsiveLayouts = {
       i: "github-repositories",
       x: 0,
       y: 8,
+      w: 1,
+      h: 8,
+    },
+    {
+      i: "github-commits",
+      x: 0,
+      y: 16,
       w: 1,
       h: 8,
     },
@@ -427,6 +456,50 @@ export default function DashboardGrid() {
                   language: "TypeScript",
                   stars: 6,
                   url: "https://github.com/alice_01/portfolio",
+                },
+              ]}
+            />
+          </div>
+
+          <div
+            key="github-commits"
+            className="h-full w-full"
+          >
+            <GithubCommitsLargeWidget
+              username="alice_01"
+              repository="epitech-dashboard"
+              commits={[
+                {
+                  message:
+                    "Add responsive widget layouts",
+                  author: "alice_01",
+                  timeAgo: "12 minutes ago",
+                  hash: "a92d4f1",
+                  url: "https://github.com/alice_01/epitech-dashboard/commit/a92d4f1",
+                },
+                {
+                  message:
+                    "Improve service error messages",
+                  author: "alice_01",
+                  timeAgo: "38 minutes ago",
+                  hash: "7bc203e",
+                  url: "https://github.com/alice_01/epitech-dashboard/commit/7bc203e",
+                },
+                {
+                  message:
+                    "Add RSS feed validation",
+                  author: "alice_01",
+                  timeAgo: "2 hours ago",
+                  hash: "19e65c8",
+                  url: "https://github.com/alice_01/epitech-dashboard/commit/19e65c8",
+                },
+                {
+                  message:
+                    "Refactor dashboard widget components",
+                  author: "alice_01",
+                  timeAgo: "4 hours ago",
+                  hash: "c84f912",
+                  url: "https://github.com/alice_01/epitech-dashboard/commit/c84f912",
                 },
               ]}
             />
