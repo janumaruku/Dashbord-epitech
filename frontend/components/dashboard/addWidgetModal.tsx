@@ -4,6 +4,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+
 import { createPortal } from "react-dom";
 
 import {
@@ -12,13 +13,14 @@ import {
   Clock3,
   CloudSun,
   Code2,
+  Lock,
   X,
 } from "lucide-react";
 
-type ServiceType =
-  | "weather"
-  | "github"
-  | "clock";
+import {
+  type ServiceId,
+  useServices,
+} from "@/components/services/serviceContext";
 
 type WeatherWidgetType =
   | "current"
@@ -39,24 +41,38 @@ type WidgetType =
   | GithubWidgetType
   | ClockWidgetType;
 
+type WidgetTypeOption = {
+  id: WidgetType;
+  name: string;
+  description: string;
+};
+
 export type NewWidgetConfig = {
-  service: ServiceType;
+  service: ServiceId;
   widgetType: WidgetType;
 
   city?: string;
-  unit?: "celsius" | "fahrenheit";
+
+  unit?:
+    | "celsius"
+    | "fahrenheit";
 
   username?: string;
+
   repository?: string;
 
   timeZone?: string;
-  timeFormat?: "24h" | "12h";
+
+  timeFormat?:
+    | "24h"
+    | "12h";
 
   refreshRate?: number;
 };
 
 type AddWidgetModalProps = {
   onClose: () => void;
+
   onAdd: (
     config: NewWidgetConfig
   ) => void;
@@ -91,22 +107,25 @@ const services = [
   },
 ];
 
-const widgetTypes = {
+const widgetTypes: Record<
+  ServiceId,
+  WidgetTypeOption[]
+> = {
   weather: [
     {
-      id: "current" as const,
+      id: "current",
       name: "Current weather",
       description:
         "Current temperature and conditions for a city.",
     },
     {
-      id: "hourly" as const,
+      id: "hourly",
       name: "Hourly forecast",
       description:
         "Current weather with the next hours forecast.",
     },
     {
-      id: "forecast" as const,
+      id: "forecast",
       name: "Full forecast",
       description:
         "Current weather, hourly forecast, and upcoming days.",
@@ -115,19 +134,19 @@ const widgetTypes = {
 
   github: [
     {
-      id: "profile" as const,
+      id: "profile",
       name: "Profile",
       description:
         "GitHub profile, followers, and public repositories.",
     },
     {
-      id: "repositories" as const,
+      id: "repositories",
       name: "Recent repositories",
       description:
         "Your latest GitHub repositories and activity.",
     },
     {
-      id: "commits" as const,
+      id: "commits",
       name: "Recent commits",
       description:
         "Recent commits from one of your repositories.",
@@ -136,13 +155,13 @@ const widgetTypes = {
 
   clock: [
     {
-      id: "analog" as const,
+      id: "analog",
       name: "Analog clock",
       description:
         "A compact analog clock for a selected city.",
     },
     {
-      id: "digital" as const,
+      id: "digital",
       name: "Digital clock",
       description:
         "A digital clock with hours, minutes, and seconds.",
@@ -169,14 +188,21 @@ export default function AddWidgetModal({
   const isClient =
     useIsClient();
 
-  const [step, setStep] =
+  const {
+    canUseService,
+  } = useServices();
+
+  const [
+    step,
+    setStep,
+  ] =
     useState<Step>(1);
 
   const [
     selectedService,
     setSelectedService,
   ] =
-    useState<ServiceType>(
+    useState<ServiceId>(
       "weather"
     );
 
@@ -193,7 +219,8 @@ export default function AddWidgetModal({
 
   const [unit, setUnit] =
     useState<
-      "celsius" | "fahrenheit"
+      | "celsius"
+      | "fahrenheit"
     >("celsius");
 
   const [
@@ -220,14 +247,24 @@ export default function AddWidgetModal({
     >("24h");
 
   function selectService(
-    service: ServiceType
+    service: ServiceId
   ) {
+    if (
+      !canUseService(
+        service
+      )
+    ) {
+      return;
+    }
+
     setSelectedService(
       service
     );
 
     const firstType =
-      widgetTypes[service][0];
+      widgetTypes[
+        service
+      ][0];
 
     setSelectedWidgetType(
       firstType.id
@@ -245,6 +282,15 @@ export default function AddWidgetModal({
   }
 
   function goNext() {
+    if (
+      step === 1 &&
+      !canUseService(
+        selectedService
+      )
+    ) {
+      return;
+    }
+
     if (step < 3) {
       setStep(
         (step + 1) as Step
@@ -254,16 +300,28 @@ export default function AddWidgetModal({
 
   function handleAdd() {
     if (
+      !canUseService(
+        selectedService
+      )
+    ) {
+      return;
+    }
+
+    if (
       selectedService ===
       "weather"
     ) {
       onAdd({
         service:
           "weather",
+
         widgetType:
           selectedWidgetType,
+
         city,
+
         unit,
+
         refreshRate,
       });
 
@@ -277,14 +335,18 @@ export default function AddWidgetModal({
       onAdd({
         service:
           "github",
+
         widgetType:
           selectedWidgetType,
+
         username,
+
         repository:
           selectedWidgetType ===
           "commits"
             ? repository
             : undefined,
+
         refreshRate,
       });
 
@@ -292,12 +354,17 @@ export default function AddWidgetModal({
     }
 
     onAdd({
-      service: "clock",
+      service:
+        "clock",
+
       widgetType:
         selectedWidgetType,
+
       city,
+
       timeZone:
         "Europe/Paris",
+
       timeFormat,
     });
   }
@@ -306,22 +373,32 @@ export default function AddWidgetModal({
     return null;
   }
 
-  const currentTypes =
-    widgetTypes[
+  const currentTypes:
+    WidgetTypeOption[] =
+      widgetTypes[
+        selectedService
+      ];
+
+  const selectedServiceAvailable =
+    canUseService(
       selectedService
-    ];
+    );
 
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4 sm:p-6"
-      onClick={onClose}
+      onClick={
+        onClose
+      }
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-widget-title"
         className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 text-white shadow-2xl"
-        onClick={(event) =>
+        onClick={(
+          event
+        ) =>
           event.stopPropagation()
         }
       >
@@ -337,11 +414,15 @@ export default function AddWidgetModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
             className="flex h-9 w-9 items-center justify-center rounded-md text-zinc-400 hover:bg-zinc-800 hover:text-white"
             aria-label="Close"
           >
-            <X size={20} />
+            <X
+              size={20}
+            />
           </button>
         </div>
 
@@ -350,7 +431,9 @@ export default function AddWidgetModal({
             <StepIndicator
               number={1}
               label="Service"
-              active={step >= 1}
+              active={
+                step >= 1
+              }
               current={
                 step === 1
               }
@@ -359,7 +442,9 @@ export default function AddWidgetModal({
             <StepIndicator
               number={2}
               label="Widget type"
-              active={step >= 2}
+              active={
+                step >= 2
+              }
               current={
                 step === 2
               }
@@ -368,7 +453,9 @@ export default function AddWidgetModal({
             <StepIndicator
               number={3}
               label="Configure"
-              active={step >= 3}
+              active={
+                step >= 3
+              }
               current={
                 step === 3
               }
@@ -384,18 +471,28 @@ export default function AddWidgetModal({
               </h3>
 
               <p className="mt-1 text-sm text-zinc-500">
-                Choose the service you want to add to your dashboard.
+                Only connected or
+                subscribed services
+                can be used.
               </p>
 
               <div className="mt-6 space-y-3">
                 {services.map(
-                  (service) => {
+                  (
+                    service
+                  ) => {
                     const Icon =
                       service.icon;
 
+                    const available =
+                      canUseService(
+                        service.id
+                      );
+
                     const selected =
                       selectedService ===
-                      service.id;
+                        service.id &&
+                      available;
 
                     return (
                       <button
@@ -403,20 +500,27 @@ export default function AddWidgetModal({
                           service.id
                         }
                         type="button"
+                        disabled={
+                          !available
+                        }
                         onClick={() =>
                           selectService(
                             service.id
                           )
                         }
                         className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition ${
-                          selected
-                            ? "border-zinc-400 bg-zinc-900"
-                            : "border-zinc-700 bg-zinc-950 hover:bg-zinc-900"
+                          !available
+                            ? "cursor-not-allowed border-zinc-800 bg-zinc-950 opacity-50"
+                            : selected
+                              ? "border-zinc-400 bg-zinc-900"
+                              : "border-zinc-700 bg-zinc-950 hover:bg-zinc-900"
                         }`}
                       >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-zinc-900">
                           <Icon
-                            size={21}
+                            size={
+                              21
+                            }
                             className="text-zinc-300"
                           />
                         </div>
@@ -434,19 +538,42 @@ export default function AddWidgetModal({
                             }
                           </p>
 
-                          <p className="mt-2 text-xs text-zinc-400">
-                            {
-                              service.widgetCount
-                            }{" "}
-                            widget types
-                          </p>
+                          {available ? (
+                            <p className="mt-2 text-xs text-zinc-400">
+                              {
+                                service.widgetCount
+                              }{" "}
+                              widget types
+                            </p>
+                          ) : (
+                            <p className="mt-2 flex items-center gap-1.5 text-xs text-zinc-500">
+                              <Lock
+                                size={
+                                  13
+                                }
+                              />
+
+                              Connect or
+                              subscribe
+                              first
+                            </p>
+                          )}
                         </div>
 
-                        <SelectionCircle
-                          selected={
-                            selected
-                          }
-                        />
+                        {available ? (
+                          <SelectionCircle
+                            selected={
+                              selected
+                            }
+                          />
+                        ) : (
+                          <Lock
+                            size={
+                              18
+                            }
+                            className="shrink-0 text-zinc-600"
+                          />
+                        )}
                       </button>
                     );
                   }
@@ -458,24 +585,22 @@ export default function AddWidgetModal({
           {step === 2 && (
             <>
               <h3 className="text-xl font-semibold">
-                Choose a widget type
+                Choose a widget
+                type
               </h3>
 
               <p className="mt-1 text-sm text-zinc-500">
-                Choose what you&apos;d like to display from{" "}
-                {
-                  services.find(
-                    (service) =>
-                      service.id ===
-                      selectedService
-                  )?.name
-                }
-                .
+                Choose what
+                you&apos;d like
+                to display.
               </p>
 
               <div className="mt-6 space-y-3">
                 {currentTypes.map(
-                  (type) => {
+                  (
+                    type:
+                      WidgetTypeOption
+                  ) => {
                     const selected =
                       selectedWidgetType ===
                       type.id;
@@ -527,22 +652,28 @@ export default function AddWidgetModal({
           {step === 3 && (
             <>
               <h3 className="text-xl font-semibold">
-                Configure your widget
+                Configure your
+                widget
               </h3>
 
               <p className="mt-1 text-sm text-zinc-500">
-                Set the options for this widget.
+                Set the options
+                for this widget.
               </p>
 
               <div className="mt-6">
                 {selectedService ===
                   "weather" && (
                   <WeatherConfiguration
-                    city={city}
+                    city={
+                      city
+                    }
                     onCityChange={
                       setCity
                     }
-                    unit={unit}
+                    unit={
+                      unit
+                    }
                     onUnitChange={
                       setUnit
                     }
@@ -582,7 +713,9 @@ export default function AddWidgetModal({
                 {selectedService ===
                   "clock" && (
                   <ClockConfiguration
-                    city={city}
+                    city={
+                      city
+                    }
                     onCityChange={
                       setCity
                     }
@@ -604,7 +737,9 @@ export default function AddWidgetModal({
             {step > 1 && (
               <button
                 type="button"
-                onClick={goBack}
+                onClick={
+                  goBack
+                }
                 className="flex h-11 items-center justify-center gap-2 rounded-md border border-zinc-700 px-5 text-sm font-medium text-zinc-200 hover:bg-zinc-900"
               >
                 <ArrowLeft
@@ -618,8 +753,17 @@ export default function AddWidgetModal({
             {step < 3 ? (
               <button
                 type="button"
-                onClick={goNext}
-                className="h-11 flex-1 rounded-md bg-zinc-100 px-5 text-sm font-semibold text-zinc-950 hover:bg-white"
+                onClick={
+                  goNext
+                }
+                disabled={
+                  !selectedServiceAvailable
+                }
+                className={`h-11 flex-1 rounded-md px-5 text-sm font-semibold ${
+                  selectedServiceAvailable
+                    ? "bg-zinc-100 text-zinc-950 hover:bg-white"
+                    : "cursor-not-allowed bg-zinc-800 text-zinc-600"
+                }`}
               >
                 Next
               </button>
@@ -629,7 +773,14 @@ export default function AddWidgetModal({
                 onClick={
                   handleAdd
                 }
-                className="h-11 flex-1 rounded-md bg-zinc-100 px-5 text-sm font-semibold text-zinc-950 hover:bg-white"
+                disabled={
+                  !selectedServiceAvailable
+                }
+                className={`h-11 flex-1 rounded-md px-5 text-sm font-semibold ${
+                  selectedServiceAvailable
+                    ? "bg-zinc-100 text-zinc-950 hover:bg-white"
+                    : "cursor-not-allowed bg-zinc-800 text-zinc-600"
+                }`}
               >
                 Add widget
               </button>
@@ -638,7 +789,9 @@ export default function AddWidgetModal({
 
           <button
             type="button"
-            onClick={onClose}
+            onClick={
+              onClose
+            }
             className="mt-3 h-11 w-full rounded-md border border-zinc-700 text-sm font-medium text-zinc-300 hover:bg-zinc-900"
           >
             Cancel
@@ -700,7 +853,9 @@ function SelectionCircle({
       }`}
     >
       {selected && (
-        <Check size={13} />
+        <Check
+          size={13}
+        />
       )}
     </div>
   );
@@ -751,9 +906,12 @@ function WeatherConfiguration({
         <input
           id="new-weather-city"
           value={city}
-          onChange={(event) =>
+          onChange={(
+            event
+          ) =>
             onCityChange(
-              event.target.value
+              event.target
+                .value
             )
           }
           className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-white outline-none focus:border-zinc-500"
@@ -768,7 +926,8 @@ function WeatherConfiguration({
         <div className="grid grid-cols-2 gap-3">
           <OptionButton
             selected={
-              unit === "celsius"
+              unit ===
+              "celsius"
             }
             onClick={() =>
               onUnitChange(
@@ -796,7 +955,9 @@ function WeatherConfiguration({
       </div>
 
       <RefreshRateSelect
-        value={refreshRate}
+        value={
+          refreshRate
+        }
         onChange={
           onRefreshRateChange
         }
@@ -807,7 +968,9 @@ function WeatherConfiguration({
 
 type GithubConfigurationProps = {
   username: string;
+
   widgetType: WidgetType;
+
   repository: string;
 
   onRepositoryChange: (
@@ -856,9 +1019,12 @@ function GithubConfiguration({
             value={
               repository
             }
-            onChange={(event) =>
+            onChange={(
+              event
+            ) =>
               onRepositoryChange(
-                event.target.value
+                event.target
+                  .value
               )
             }
             className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-white outline-none focus:border-zinc-500"
@@ -883,7 +1049,9 @@ function GithubConfiguration({
       )}
 
       <RefreshRateSelect
-        value={refreshRate}
+        value={
+          refreshRate
+        }
         onChange={
           onRefreshRateChange
         }
@@ -929,9 +1097,12 @@ function ClockConfiguration({
         <input
           id="new-clock-city"
           value={city}
-          onChange={(event) =>
+          onChange={(
+            event
+          ) =>
             onCityChange(
-              event.target.value
+              event.target
+                .value
             )
           }
           placeholder="Search for a city"
@@ -984,14 +1155,18 @@ function OptionButton({
   children,
 }: {
   selected: boolean;
+
   onClick: () => void;
+
   children:
     React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={
+        onClick
+      }
       className={`rounded-md border px-4 py-3 text-sm ${
         selected
           ? "border-zinc-400 bg-zinc-800 text-white"
@@ -1025,10 +1200,13 @@ function RefreshRateSelect({
       <select
         id="new-widget-refresh-rate"
         value={value}
-        onChange={(event) =>
+        onChange={(
+          event
+        ) =>
           onChange(
             Number(
-              event.target.value
+              event.target
+                .value
             )
           )
         }
