@@ -12,6 +12,7 @@ import WeatherMediumWidget from "@/components/widget/weather/weatherMediumWidget
 import WeatherLargeWidget from "@/components/widget/weather/weatherLargeWidget";
 
 import GithubSmallWidget from "@/components/widget/github/githubSmallWidget";
+import GithubLargeWidget from "@/components/widget/github/githubRepoLargeWidget";
 
 import type {
   WeatherConfig,
@@ -82,6 +83,13 @@ const initialLayouts: ResponsiveLayouts = {
       w: 1,
       h: 4,
     },
+    {
+      i: "github-repositories",
+      x: 2,
+      y: 0,
+      w: 2,
+      h: 8,
+    },
   ],
 
   tabletLandscape: [
@@ -98,6 +106,13 @@ const initialLayouts: ResponsiveLayouts = {
       y: 0,
       w: 1,
       h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 2,
+      y: 0,
+      w: 2,
+      h: 8,
     },
   ],
 
@@ -116,6 +131,13 @@ const initialLayouts: ResponsiveLayouts = {
       w: 1,
       h: 4,
     },
+    {
+      i: "github-repositories",
+      x: 0,
+      y: 4,
+      w: 2,
+      h: 8,
+    },
   ],
 
   mobile: [
@@ -132,6 +154,13 @@ const initialLayouts: ResponsiveLayouts = {
       y: 4,
       w: 1,
       h: 4,
+    },
+    {
+      i: "github-repositories",
+      x: 0,
+      y: 8,
+      w: 1,
+      h: 8,
     },
   ],
 };
@@ -357,6 +386,49 @@ export default function DashboardGrid() {
               username="alice_01"
               followers={128}
               publicRepos={24}
+            />
+          </div>
+
+          <div
+            key="github-repositories"
+            className="h-full w-full"
+          >
+            <GithubLargeWidget
+              username="alice_01"
+              repositories={[
+                {
+                  name: "epitech-dashboard",
+                  description:
+                    "A personal workspace for weather, code, and feeds.",
+                  language: "TypeScript",
+                  stars: 24,
+                  url: "https://github.com/alice_01/epitech-dashboard",
+                },
+                {
+                  name: "go-weather-client",
+                  description:
+                    "A small, typed OpenWeatherMap client in Go.",
+                  language: "Go",
+                  stars: 12,
+                  url: "https://github.com/alice_01/go-weather-client",
+                },
+                {
+                  name: "rss-reader",
+                  description:
+                    "A lightweight feed parser with sensible caching.",
+                  language: "Go",
+                  stars: 8,
+                  url: "https://github.com/alice_01/rss-reader",
+                },
+                {
+                  name: "portfolio",
+                  description:
+                    "Personal portfolio and project showcase.",
+                  language: "TypeScript",
+                  stars: 6,
+                  url: "https://github.com/alice_01/portfolio",
+                },
+              ]}
             />
           </div>
         </Responsive>
