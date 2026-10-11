@@ -40,7 +40,20 @@ Authorization: Bearer <token>
 - The refresh token is an opaque 64-character hexadecimal string. It is valid for 7 days and is rotated on every use: each `POST /auth/refresh` returns a new one, and the previous one stops working immediately.
 - Every `/api/*` and `/dashboard/*` route shares a single rate limit of 100 requests / minute / user (keyed on the authenticated user ID, after the token is validated). Exceeding it returns `RATE_LIMITED` (429) on the request that crosses the threshold.
 
-### 1.5 Error responses
+### 1.5 Security headers
+
+Every response, including 404s and error responses, carries:
+
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | `default-src 'none'` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
+
+The backend serves only JSON, never HTML, so the CSP denies everything by default rather than allowlisting sources.
+
+### 1.6 Error responses
 
 Every error response, from every endpoint, has this shape:
 
@@ -88,7 +101,7 @@ Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNo
 
 **Unmatched routes** return Gin's default plain-text `404 page not found`, not the error shape above.
 
-### 1.6 HTTP status codes used
+### 1.7 HTTP status codes used
 
 | Status | When |
 |---|---|

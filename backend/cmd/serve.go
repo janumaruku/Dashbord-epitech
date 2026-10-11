@@ -36,6 +36,7 @@ var serveCommand = &cobra.Command{
 		}
 
 		r := gin.Default()
+		r.Use(middleware.SecurityHeaders())
 		r.Use(middleware.CORS(frontendURL))
 		r.Use(middleware.ErrorHandler())
 		handlers.RegisterRoutes(r, app)
