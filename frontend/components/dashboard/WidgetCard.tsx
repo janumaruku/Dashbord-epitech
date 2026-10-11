@@ -11,11 +11,15 @@ import type {
   WeatherForecastData,
   WeatherTemperatureData,
 } from "@/lib/weather";
+import type { GithubCommitsData, GithubProfileData, GithubReposData } from "@/lib/githubWidgets";
 import AnalogClock from "@/components/dashboard/widgets/AnalogClock";
 import DigitalClock from "@/components/dashboard/widgets/DigitalClock";
 import WeatherTemperature from "@/components/dashboard/widgets/WeatherTemperature";
 import WeatherConditions from "@/components/dashboard/widgets/WeatherConditions";
 import WeatherForecast from "@/components/dashboard/widgets/WeatherForecast";
+import GithubProfile from "@/components/dashboard/widgets/GithubProfile";
+import GithubRepos from "@/components/dashboard/widgets/GithubRepos";
+import GithubCommits from "@/components/dashboard/widgets/GithubCommits";
 import NoDataPlaceholder from "@/components/dashboard/NoDataPlaceholder";
 
 type WidgetCardProps = {
@@ -85,6 +89,15 @@ export default function WidgetCard({
     }
     if (widget.name === "city_forecast") {
       return <WeatherForecast data={data as unknown as WeatherForecastData} />;
+    }
+    if (widget.name === "user_profile") {
+      return <GithubProfile data={data as unknown as GithubProfileData} />;
+    }
+    if (widget.name === "recent_repos") {
+      return <GithubRepos data={data as unknown as GithubReposData} />;
+    }
+    if (widget.name === "recent_commits") {
+      return <GithubCommits data={data as unknown as GithubCommitsData} />;
     }
     return <NoDataPlaceholder message="This widget's data service isn't connected yet." />;
   }
