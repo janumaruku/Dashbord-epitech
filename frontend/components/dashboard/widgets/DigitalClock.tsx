@@ -10,7 +10,7 @@ function pad(value: number) {
 
 function DigitTile({ value }: { value: string }) {
   return (
-    <span className="relative flex h-[60px] w-11 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 font-mono text-3xl font-bold text-cyan-400">
+    <span className="relative flex h-[60px] w-11 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 font-mono text-4xl font-bold text-cyan-400">
       {value}
       <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-black" />
     </span>
