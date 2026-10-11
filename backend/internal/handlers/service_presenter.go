@@ -13,15 +13,17 @@ type ServicePresenter struct {
 	Description   string  `json:"description"`
 	RequiresAuth  bool    `json:"requires_auth"`
 	OAuthProvider *string `json:"oauth_provider"`
+	Subscribed    bool    `json:"subscribed"`
 }
 
-func NewServicePresenter(s models.Service) ServicePresenter {
+func NewServicePresenter(s models.Service, subscribed bool) ServicePresenter {
 	return ServicePresenter{
 		ID:            s.ID,
 		Name:          s.Name,
 		Description:   s.Description,
 		RequiresAuth:  s.RequiresAuth,
 		OAuthProvider: s.OAuthProvider,
+		Subscribed:    subscribed,
 	}
 }
 

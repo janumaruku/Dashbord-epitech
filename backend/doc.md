@@ -969,6 +969,16 @@ User-provided feed URLs, no auth · Rate limit: ~1 call/10min per feed · Cache 
 
 Error handling: 404 feed not found → "Invalid feed URL" · 503 host down → cached data · malformed XML → cached data + warning · timeout (>5s) → cached data + "Feed loading slow"
 
+### Service 4: Clock (client-computed, no external API)
+No external auth, no API key, no rate limit · no cache — the displayed time is computed client-side from the browser's own clock via `Intl.DateTimeFormat`, not fetched from the backend.
+
+| Widget | Params | Display | Typical Refresh |
+|---|---|---|---|
+| analog_clock | timezone (string, IANA name) | Analog clock face | n/a — ticks locally in the browser |
+| digital_clock | timezone (string, IANA name) | Digital time readout | n/a — ticks locally in the browser |
+
+`refresh_rate` is still stored on the widget instance (5-3600s, RG8) for schema consistency with every other widget type, but has no functional effect: the backend's refresh scheduler (§7) never fetches or caches data for a Clock widget instance, so `widget_data` stays empty for it and `GET /dashboard/widgets` always returns `data: null, cached: false` for these instances — the frontend renders the time itself from `timezone`, not from the API response.
+
 ### Error Handling Strategy (All Services)
 1. **Input Validation** — validate widget configuration before calling any API; 400 if invalid.
 2. **Cache Check** — if cached data is still fresh (not past `expires_at`), return it immediately.
