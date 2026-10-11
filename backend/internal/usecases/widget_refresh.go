@@ -1,6 +1,8 @@
 package usecases
 
 import (
+	"log"
+	"sync"
 	"time"
 
 	"gorm.io/gorm"
@@ -28,7 +30,7 @@ func RefreshWidgetData(
 		return nil, err
 	}
 
-	if cached != nil && cached.ExpiresAt != nil && cached.ExpiresAt.After(time.Now()) {
+	if isWidgetDataFresh(cached) {
 		return &WidgetRefreshResult{Data: cached.Data, FetchedAt: &cached.FetchedAt, Cached: true}, nil
 	}
 
@@ -96,4 +98,54 @@ func fetchExternalData(
 
 func isClockWidgetName(name string) bool {
 	return name == "analog_clock" || name == "digital_clock"
+}
+
+func isWidgetDataFresh(cached *models.WidgetData) bool {
+	return cached != nil && cached.ExpiresAt != nil && cached.ExpiresAt.After(time.Now())
+}
+
+// RefreshAllStaleWidgets scans every widget instance across every user and
+// refreshes the ones whose cached data is missing or expired, concurrently.
+// Called by the background scheduler, not from any HTTP handler.
+func RefreshAllStaleWidgets(db *gorm.DB, openWeatherAPIKey string) {
+	instances, err := models.ListAllWidgetInstances(db)
+	if err != nil {
+		log.Printf("scheduler: could not list widget instances: %v", err)
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	for _, instance := range instances {
+		widget, err := models.FindWidgetByID(db, instance.WidgetID)
+		if err != nil {
+			log.Printf("scheduler: could not load widget %s: %v", instance.WidgetID, err)
+			continue
+		}
+
+		if isClockWidgetName(widget.Name) {
+			continue
+		}
+
+		cached, err := models.FindLatestWidgetData(db, instance.ID)
+		if err != nil {
+			log.Printf("scheduler: could not load cache for instance %s: %v", instance.ID, err)
+			continue
+		}
+
+		if isWidgetDataFresh(cached) {
+			continue
+		}
+
+		wg.Add(1)
+		go func(instance models.WidgetInstance, widget models.Widget) {
+			defer wg.Done()
+
+			if _, err := RefreshWidgetData(db, instance.UserID, instance, widget, openWeatherAPIKey); err != nil {
+				log.Printf("scheduler: refresh failed for instance %s: %v", instance.ID, err)
+			}
+		}(instance, *widget)
+	}
+
+	wg.Wait()
 }

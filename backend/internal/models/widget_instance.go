@@ -44,6 +44,16 @@ func CreateWidgetInstance(db *gorm.DB, wi *WidgetInstance) error {
 	return db.Create(wi).Error
 }
 
+func ListAllWidgetInstances(db *gorm.DB) ([]WidgetInstance, error) {
+	var instances []WidgetInstance
+
+	if err := db.Find(&instances).Error; err != nil {
+		return nil, err
+	}
+
+	return instances, nil
+}
+
 func ListWidgetInstancesByUser(db *gorm.DB, userID string) ([]WidgetInstance, error) {
 	var instances []WidgetInstance
 
