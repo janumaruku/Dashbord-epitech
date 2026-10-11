@@ -4,6 +4,17 @@ import { useTickingClock } from "@/hooks/useTickingClock";
 import { getDateLabel, getTimeParts, isValidTimezone } from "@/lib/clock";
 import InvalidTimezoneNotice from "@/components/dashboard/widgets/InvalidTimezoneNotice";
 
+const HOUR_MARKS = Array.from({ length: 12 }, (_, i) => {
+  const hour = i + 1;
+  const angle = (hour * 30 * Math.PI) / 180;
+  const radius = 37;
+  return {
+    hour,
+    x: 50 + radius * Math.sin(angle),
+    y: 50 - radius * Math.cos(angle),
+  };
+});
+
 export default function AnalogClock({ timezone }: { timezone: string }) {
   const now = useTickingClock();
 
@@ -29,6 +40,19 @@ export default function AnalogClock({ timezone }: { timezone: string }) {
           className="text-zinc-700"
           strokeWidth="2"
         />
+        {HOUR_MARKS.map(({ hour, x, y }) => (
+          <text
+            key={hour}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="8"
+            className="fill-zinc-400 font-semibold"
+          >
+            {hour}
+          </text>
+        ))}
         <line
           x1="50"
           y1="50"
