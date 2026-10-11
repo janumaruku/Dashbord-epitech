@@ -12,6 +12,7 @@ import type {
   WeatherTemperatureData,
 } from "@/lib/weather";
 import type { GithubCommitsData, GithubProfileData, GithubReposData } from "@/lib/githubWidgets";
+import type { RssLatestData, RssSummaryData } from "@/lib/rssWidgets";
 import AnalogClock from "@/components/dashboard/widgets/AnalogClock";
 import DigitalClock from "@/components/dashboard/widgets/DigitalClock";
 import WeatherTemperature from "@/components/dashboard/widgets/WeatherTemperature";
@@ -20,6 +21,8 @@ import WeatherForecast from "@/components/dashboard/widgets/WeatherForecast";
 import GithubProfile from "@/components/dashboard/widgets/GithubProfile";
 import GithubRepos from "@/components/dashboard/widgets/GithubRepos";
 import GithubCommits from "@/components/dashboard/widgets/GithubCommits";
+import RssLatest from "@/components/dashboard/widgets/RssLatest";
+import RssSummary from "@/components/dashboard/widgets/RssSummary";
 import NoDataPlaceholder from "@/components/dashboard/NoDataPlaceholder";
 
 type WidgetCardProps = {
@@ -98,6 +101,17 @@ export default function WidgetCard({
     }
     if (widget.name === "recent_commits") {
       return <GithubCommits data={data as unknown as GithubCommitsData} />;
+    }
+    if (widget.name === "feed_latest") {
+      return <RssLatest data={data as unknown as RssLatestData} />;
+    }
+    if (widget.name === "feed_summary") {
+      return (
+        <RssSummary
+          data={data as unknown as RssSummaryData}
+          feedUrl={getConfigString(instance.config, "feed_url", "")}
+        />
+      );
     }
     return <NoDataPlaceholder message="This widget's data service isn't connected yet." />;
   }
