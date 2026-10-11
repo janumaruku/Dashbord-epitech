@@ -23,4 +23,4 @@ COPY --from=builder /app/server .
 COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 8080
-CMD ["sh", "-c", "./server migrate up && ./server serve"]
+CMD ["sh", "-c", "./server migrate up && ./server seed && ./server serve"]
