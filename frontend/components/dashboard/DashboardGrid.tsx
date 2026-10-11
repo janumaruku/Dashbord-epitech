@@ -10,7 +10,14 @@ import {
 } from "@/lib/widgets";
 import type { WidgetInstance } from "@/hooks/useWidgetInstances";
 import type { CatalogWidget } from "@/hooks/useWidgetCatalog";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import WidgetCard from "@/components/dashboard/WidgetCard";
+
+function stackedHeight(h: number): number {
+  return h * ROW_HEIGHT + (h - 1) * GRID_GAP;
+}
+
+function noop() {}
 
 type DashboardGridProps = {
   instances: WidgetInstance[];
@@ -40,6 +47,7 @@ export default function DashboardGrid({
   const containerRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
   const [liveOverride, setLiveOverride] = useState<Position | null>(null);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   function beginDrag(
     instance: WidgetInstance,
@@ -99,6 +107,34 @@ export default function DashboardGrid({
     }
     setDrag(null);
     setLiveOverride(null);
+  }
+
+  if (!isDesktop) {
+    const sorted = [...instances].sort((a, b) => {
+      if (a.position.y !== b.position.y) return a.position.y - b.position.y;
+      return a.position.x - b.position.x;
+    });
+
+    return (
+      <div className="flex flex-col gap-4">
+        {sorted.map((instance) => {
+          const widget = catalog.find((w) => w.id === instance.widget_id);
+
+          return (
+            <div key={instance.id} style={{ height: stackedHeight(instance.position.h) }}>
+              <WidgetCard
+                instance={instance}
+                widget={widget}
+                onDragHandlePointerDown={noop}
+                onResizeHandlePointerDown={noop}
+                onDelete={() => onDelete(instance.id)}
+                onRefetchDue={onRefetchDue}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
