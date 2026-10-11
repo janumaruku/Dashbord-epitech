@@ -16,6 +16,7 @@ export type WidgetInstance = {
   data: unknown;
   fetched_at: string | null;
   cached: boolean;
+  warning: string | null;
 };
 
 export function useWidgetInstances() {

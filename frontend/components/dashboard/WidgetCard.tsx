@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, type PointerEvent } from "react";
-import { GripVertical, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
+import { AlertTriangle, GripVertical, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
 import type { WidgetInstance } from "@/hooks/useWidgetInstances";
 import type { CatalogWidget } from "@/hooks/useWidgetCatalog";
 import { accentForWidget, isClockWidget, titleForWidget } from "@/lib/widgets";
+import { asRecord } from "@/lib/weather";
+import type {
+  WeatherConditionsData,
+  WeatherForecastData,
+  WeatherTemperatureData,
+} from "@/lib/weather";
 import AnalogClock from "@/components/dashboard/widgets/AnalogClock";
 import DigitalClock from "@/components/dashboard/widgets/DigitalClock";
+import WeatherTemperature from "@/components/dashboard/widgets/WeatherTemperature";
+import WeatherConditions from "@/components/dashboard/widgets/WeatherConditions";
+import WeatherForecast from "@/components/dashboard/widgets/WeatherForecast";
 import NoDataPlaceholder from "@/components/dashboard/NoDataPlaceholder";
 
 type WidgetCardProps = {
@@ -53,6 +62,32 @@ export default function WidgetCard({
   const accent = accentForWidget(widget?.name ?? "");
   const title = widget ? titleForWidget(widget.name) : "Widget";
   const isClock = isClockWidget(widget?.name);
+  const data = asRecord(instance.data);
+
+  function renderContent() {
+    if (widget?.name === "analog_clock") {
+      return <AnalogClock timezone={getConfigString(instance.config, "timezone", "UTC")} />;
+    }
+    if (widget?.name === "digital_clock") {
+      return <DigitalClock timezone={getConfigString(instance.config, "timezone", "UTC")} />;
+    }
+    if (!widget) {
+      return <NoDataPlaceholder message="Loading…" />;
+    }
+    if (!data) {
+      return <NoDataPlaceholder message={instance.warning ?? "No data yet"} />;
+    }
+    if (widget.name === "city_temperature") {
+      return <WeatherTemperature data={data as unknown as WeatherTemperatureData} />;
+    }
+    if (widget.name === "current_conditions") {
+      return <WeatherConditions data={data as unknown as WeatherConditionsData} />;
+    }
+    if (widget.name === "city_forecast") {
+      return <WeatherForecast data={data as unknown as WeatherForecastData} />;
+    }
+    return <NoDataPlaceholder message="This widget's data service isn't connected yet." />;
+  }
 
   return (
     <div className="relative flex h-full flex-col rounded-2xl bg-zinc-900">
@@ -104,18 +139,14 @@ export default function WidgetCard({
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center px-5 py-4">
-        {widget?.name === "analog_clock" && (
-          <AnalogClock timezone={getConfigString(instance.config, "timezone", "UTC")} />
-        )}
-        {widget?.name === "digital_clock" && (
-          <DigitalClock timezone={getConfigString(instance.config, "timezone", "UTC")} />
-        )}
-        {widget && !isClock && (
-          <NoDataPlaceholder message="This widget's data service isn't connected yet." />
-        )}
-        {!widget && <NoDataPlaceholder message="Loading…" />}
-      </div>
+      <div className="flex flex-1 items-center justify-center px-5 py-4">{renderContent()}</div>
+
+      {data && instance.warning && (
+        <div className="flex items-center gap-1.5 border-t border-zinc-800 px-5 py-2 text-[11px] text-amber-400">
+          <AlertTriangle size={12} />
+          {instance.warning}
+        </div>
+      )}
 
       <div className="flex items-center justify-between border-t border-zinc-800 px-5 py-3">
         <p className="text-[11px] text-zinc-600">
