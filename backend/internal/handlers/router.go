@@ -20,6 +20,7 @@ func RegisterRoutes(r *gin.Engine, app *App) {
 		apiGroup := r.Group("/api", middleware.Auth())
 		apiGroup.GET("/services", app.ListServices)
 		apiGroup.POST("/services/:id/subscribe", app.Subscribe)
+		apiGroup.DELETE("/services/:id/subscribe", app.Unsubscribe)
 		apiGroup.GET("/widgets", app.ListWidgetCatalog)
 	}
 

@@ -37,6 +37,12 @@ var ErrGithubExchangeFailed = &dashborderrors.DashboardError{
 	Status:  http.StatusBadGateway,
 }
 
+var ErrNotSubscribedToService = &dashborderrors.DashboardError{
+	Code:    "NOT_SUBSCRIBED_TO_SERVICE",
+	Message: "You are not subscribed to this service",
+	Status:  http.StatusNotFound,
+}
+
 type SubscribeResult struct {
 	ID        string
 	ServiceID string
@@ -90,6 +96,22 @@ func Subscribe(db *gorm.DB, userID, serviceID, code string, github GithubOAuthCo
 	}
 
 	return &SubscribeResult{ID: us.ID, ServiceID: us.ServiceID, CreatedAt: us.CreatedAt}, nil
+}
+
+func Unsubscribe(db *gorm.DB, userID, serviceID string) error {
+	if _, err := models.FindServiceByID(db, serviceID); err != nil {
+		return err
+	}
+
+	subscribed, err := models.UserServiceExists(db, userID, serviceID)
+	if err != nil {
+		return err
+	}
+	if !subscribed {
+		return ErrNotSubscribedToService
+	}
+
+	return models.DeleteUserService(db, userID, serviceID)
 }
 
 func exchangeGithubCode(code string, github GithubOAuthConfig) (string, error) {

@@ -64,3 +64,20 @@ func (app *App) Subscribe(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, NewSubscriptionPresenter(result))
 }
+
+func (app *App) Unsubscribe(c *gin.Context) {
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		c.Error(dashborderrors.ErrInternal)
+		return
+	}
+
+	serviceID := c.Param("id")
+
+	if err := usecases.Unsubscribe(app.DB, session.UserID, serviceID); err != nil {
+		c.Error(err)
+		return
+	}
+
+	c.Status(http.StatusOK)
+}

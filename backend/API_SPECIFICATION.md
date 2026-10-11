@@ -68,6 +68,7 @@ Every `code` the server can return:
 | `GITHUB_CODE_REQUIRED` | 400 | A GitHub authorization code is required to connect this service | usecases |
 | `GITHUB_EXCHANGE_FAILED` | 502 | Could not complete GitHub authorization | usecases |
 | `ALREADY_SUBSCRIBED` | 409 | Already subscribed to this service | usecases |
+| `NOT_SUBSCRIBED_TO_SERVICE` | 404 | You are not subscribed to this service | usecases |
 | `SERVICE_NOT_FOUND` | 404 | Service not found | models |
 | `WIDGET_NOT_FOUND` | 404 | Widget not found | models |
 | `WIDGET_INSTANCE_NOT_FOUND` | 404 | Widget instance not found | models |
@@ -545,6 +546,33 @@ Deletes a widget instance immediately — no soft-delete. Implements UC7's delet
 
 ---
 
+### 2.13 DELETE `/api/services/:id/subscribe`
+
+Unsubscribes the authenticated user from a service, immediately — no soft-delete. Does not touch any existing widget instances created from this service's widgets; they keep working on a best-effort basis (e.g. a GitHub widget will start reporting "GitHub is not connected" on its next refresh once the token is gone).
+
+**Auth:** `Bearer` access token required.
+
+**Path parameter:**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | ID of the service, from `GET /api/services` |
+
+**Request:** no body.
+
+**Response `200`:** empty body.
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` / `INVALID_TOKEN` | As §2.6 |
+| 404 | `SERVICE_NOT_FOUND` | No service with this ID |
+| 404 | `NOT_SUBSCRIBED_TO_SERVICE` | The user isn't currently subscribed to this service |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
 ## 3. Document history
 
 | Change | Ticket |
@@ -554,3 +582,4 @@ Deletes a widget instance immediately — no soft-delete. Implements UC7's delet
 | Error shape changed from a grouped `{"errors": [{"code", "messages": [...]}]}` envelope to a single flat `{"code", "message"}` object, and error codes became specific per failure instead of three generic categories | — |
 | `POST /api/services/:id/subscribe` extended to accept `{"code"}` and complete the GitHub OAuth token exchange | T016 |
 | Widget catalog and dashboard widget instance CRUD added: `GET /api/widgets`, `POST`/`GET /dashboard/widgets`, `PUT`/`DELETE /dashboard/widgets/:id` | T019, T020, T021, T022, T023 |
+| `DELETE /api/services/:id/subscribe` added (unsubscribe) | — |

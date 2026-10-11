@@ -65,6 +65,11 @@ func ListSubscribedServiceIDs(db *gorm.DB, userID string) ([]string, error) {
 	return ids, nil
 }
 
+func DeleteUserService(db *gorm.DB, userID, serviceID string) error {
+	return db.Where("user_id = ? AND service_id = ?", userID, serviceID).
+		Delete(&UserService{}).Error
+}
+
 func CreateUserService(db *gorm.DB, us *UserService) error {
 	if err := db.Create(us).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
