@@ -36,15 +36,23 @@ const SIGNALS: {
   },
 ];
 
-function Logo() {
+function LogoMark() {
+  return (
+    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-sm font-bold text-white">
+      e_
+    </span>
+  );
+}
+
+function Logo({ iconOnly = false }: { iconOnly?: boolean }) {
   return (
     <Link href="/" className="flex items-center gap-2.5">
-      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-sm font-bold text-white">
-        e_
-      </span>
-      <span className="text-[15px] font-semibold text-white">
-        Epitech Dashboard
-      </span>
+      <LogoMark />
+      {!iconOnly && (
+        <span className="text-[15px] font-semibold text-white">
+          Epitech Dashboard
+        </span>
+      )}
     </Link>
   );
 }
@@ -57,7 +65,7 @@ export default function AuthLayout({
 }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen bg-black">
-      <aside className="hidden w-1/2 max-w-[720px] flex-col justify-between bg-zinc-900 p-14 lg:flex">
+      <aside className="hidden w-1/2 flex-col justify-between bg-zinc-900 px-10 py-10 md:flex lg:max-w-[720px] lg:px-[72px] lg:py-14">
         <div className="flex flex-col gap-8">
           <Logo />
 
@@ -110,10 +118,10 @@ export default function AuthLayout({
         </p>
       </aside>
 
-      <main className="flex flex-1 items-center justify-center px-6 py-14 lg:px-24">
-        <div className="flex w-full max-w-[360px] flex-col gap-7">
-          <div className="lg:hidden">
-            <Logo />
+      <main className="flex flex-1 items-center justify-center px-6 py-14 md:px-10 lg:px-24">
+        <div className="flex w-full max-w-[328px] flex-col gap-7 lg:max-w-[360px]">
+          <div className="md:hidden">
+            <Logo iconOnly />
           </div>
 
           <div className="flex flex-col gap-2.5">
