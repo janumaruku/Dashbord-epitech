@@ -103,6 +103,14 @@ func ListWidgetInstances(db *gorm.DB, userID, openWeatherAPIKey string) ([]Widge
 			return nil, err
 		}
 
+		subscribed, err := models.UserServiceExists(db, userID, widget.ServiceID)
+		if err != nil {
+			return nil, err
+		}
+		if !subscribed {
+			continue
+		}
+
 		if isClockWidgetName(widget.Name) {
 			result = append(result, WidgetInstanceWithData{Instance: instance})
 			continue
