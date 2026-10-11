@@ -3,6 +3,7 @@ package usecases
 import (
 	"math"
 	"net/http"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -41,8 +42,11 @@ var ErrWidgetInstanceForbidden = &dashborderrors.DashboardError{
 }
 
 type WidgetInstanceWithData struct {
-	Instance models.WidgetInstance
-	Data     *models.WidgetData
+	Instance  models.WidgetInstance
+	Data      models.JSONMap
+	FetchedAt *time.Time
+	Cached    bool
+	Warning   string
 }
 
 func CreateWidgetInstance(db *gorm.DB, userID, widgetID string, config models.JSONMap, refreshRate int, position models.Position) (*models.WidgetInstance, error) {
@@ -86,7 +90,7 @@ func CreateWidgetInstance(db *gorm.DB, userID, widgetID string, config models.JS
 	return &instance, nil
 }
 
-func ListWidgetInstances(db *gorm.DB, userID string) ([]WidgetInstanceWithData, error) {
+func ListWidgetInstances(db *gorm.DB, userID, openWeatherAPIKey string) ([]WidgetInstanceWithData, error) {
 	instances, err := models.ListWidgetInstancesByUser(db, userID)
 	if err != nil {
 		return nil, err
@@ -94,12 +98,28 @@ func ListWidgetInstances(db *gorm.DB, userID string) ([]WidgetInstanceWithData, 
 
 	result := make([]WidgetInstanceWithData, 0, len(instances))
 	for _, instance := range instances {
-		data, err := models.FindLatestWidgetData(db, instance.ID)
+		widget, err := models.FindWidgetByID(db, instance.WidgetID)
 		if err != nil {
 			return nil, err
 		}
 
-		result = append(result, WidgetInstanceWithData{Instance: instance, Data: data})
+		if isClockWidgetName(widget.Name) {
+			result = append(result, WidgetInstanceWithData{Instance: instance})
+			continue
+		}
+
+		refresh, err := RefreshWidgetData(db, userID, instance, *widget, openWeatherAPIKey)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, WidgetInstanceWithData{
+			Instance:  instance,
+			Data:      refresh.Data,
+			FetchedAt: refresh.FetchedAt,
+			Cached:    refresh.Cached,
+			Warning:   refresh.Warning,
+		})
 	}
 
 	return result, nil

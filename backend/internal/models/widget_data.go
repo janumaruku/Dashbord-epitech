@@ -28,6 +28,10 @@ func (wd *WidgetData) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
+func SaveWidgetData(db *gorm.DB, data *WidgetData) error {
+	return db.Create(data).Error
+}
+
 func FindLatestWidgetData(db *gorm.DB, instanceID string) (*WidgetData, error) {
 	var data WidgetData
 

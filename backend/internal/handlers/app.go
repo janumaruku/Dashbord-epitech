@@ -13,6 +13,7 @@ type App struct {
 	GithubClientID     string
 	GithubClientSecret string
 	GithubRedirectURI  string
+	OpenWeatherAPIKey  string
 }
 
 func NewApp() (*App, error) {
@@ -26,5 +27,6 @@ func NewApp() (*App, error) {
 		GithubClientID:     os.Getenv("GITHUB_CLIENT_ID"),
 		GithubClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
 		GithubRedirectURI:  os.Getenv("GITHUB_REDIRECT_URI"),
+		OpenWeatherAPIKey:  os.Getenv("OPENWEATHER_API_KEY"),
 	}, nil
 }

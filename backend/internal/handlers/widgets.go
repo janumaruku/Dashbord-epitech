@@ -52,7 +52,7 @@ func (app *App) CreateWidgetInstance(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, NewWidgetInstancePresenter(*instance, nil))
+	c.JSON(http.StatusCreated, NewWidgetInstancePresenter(*instance, WidgetInstanceData{}))
 }
 
 func (app *App) ListWidgetInstances(c *gin.Context) {
@@ -62,7 +62,7 @@ func (app *App) ListWidgetInstances(c *gin.Context) {
 		return
 	}
 
-	instances, err := usecases.ListWidgetInstances(app.DB, session.UserID)
+	instances, err := usecases.ListWidgetInstances(app.DB, session.UserID, app.OpenWeatherAPIKey)
 	if err != nil {
 		c.Error(err)
 		return
@@ -70,7 +70,12 @@ func (app *App) ListWidgetInstances(c *gin.Context) {
 
 	presenters := make([]WidgetInstancePresenter, 0, len(instances))
 	for _, item := range instances {
-		presenters = append(presenters, NewWidgetInstancePresenter(item.Instance, item.Data))
+		presenters = append(presenters, NewWidgetInstancePresenter(item.Instance, WidgetInstanceData{
+			Data:      item.Data,
+			FetchedAt: item.FetchedAt,
+			Cached:    item.Cached,
+			Warning:   item.Warning,
+		}))
 	}
 
 	c.JSON(http.StatusOK, presenters)
@@ -109,7 +114,7 @@ func (app *App) UpdateWidgetInstance(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, NewWidgetInstancePresenter(*instance, nil))
+	c.JSON(http.StatusOK, NewWidgetInstancePresenter(*instance, WidgetInstanceData{}))
 }
 
 func (app *App) DeleteWidgetInstance(c *gin.Context) {

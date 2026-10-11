@@ -38,6 +38,21 @@ func UserServiceExists(db *gorm.DB, userID, serviceID string) (bool, error) {
 	return count > 0, nil
 }
 
+func FindUserService(db *gorm.DB, userID, serviceID string) (*UserService, error) {
+	var us UserService
+
+	err := db.Where("user_id = ? AND service_id = ?", userID, serviceID).First(&us).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return &us, nil
+}
+
 func ListSubscribedServiceIDs(db *gorm.DB, userID string) ([]string, error) {
 	var ids []string
 

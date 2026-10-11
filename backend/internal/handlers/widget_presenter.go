@@ -50,9 +50,17 @@ type WidgetInstancePresenter struct {
 	Data        any             `json:"data"`
 	FetchedAt   *time.Time      `json:"fetched_at"`
 	Cached      bool            `json:"cached"`
+	Warning     *string         `json:"warning"`
 }
 
-func NewWidgetInstancePresenter(instance models.WidgetInstance, data *models.WidgetData) WidgetInstancePresenter {
+type WidgetInstanceData struct {
+	Data      models.JSONMap
+	FetchedAt *time.Time
+	Cached    bool
+	Warning   string
+}
+
+func NewWidgetInstancePresenter(instance models.WidgetInstance, data WidgetInstanceData) WidgetInstancePresenter {
 	p := WidgetInstancePresenter{
 		ID:          instance.ID,
 		WidgetID:    instance.WidgetID,
@@ -61,12 +69,13 @@ func NewWidgetInstancePresenter(instance models.WidgetInstance, data *models.Wid
 		Position:    instance.Position,
 		CreatedAt:   instance.CreatedAt,
 		UpdatedAt:   instance.UpdatedAt,
+		Data:        data.Data,
+		FetchedAt:   data.FetchedAt,
+		Cached:      data.Cached,
 	}
 
-	if data != nil {
-		p.Data = data.Data
-		p.FetchedAt = &data.FetchedAt
-		p.Cached = true
+	if data.Warning != "" {
+		p.Warning = &data.Warning
 	}
 
 	return p
