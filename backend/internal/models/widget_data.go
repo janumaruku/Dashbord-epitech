@@ -32,6 +32,10 @@ func SaveWidgetData(db *gorm.DB, data *WidgetData) error {
 	return db.Create(data).Error
 }
 
+func DeleteWidgetDataForInstance(db *gorm.DB, instanceID string) error {
+	return db.Where("widget_instance_id = ?", instanceID).Delete(&WidgetData{}).Error
+}
+
 func FindLatestWidgetData(db *gorm.DB, instanceID string) (*WidgetData, error) {
 	var data WidgetData
 

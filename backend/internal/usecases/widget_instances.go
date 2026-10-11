@@ -170,6 +170,12 @@ func UpdateWidgetInstance(db *gorm.DB, userID, instanceID string, update WidgetI
 		return nil, err
 	}
 
+	if update.Config != nil {
+		if err := models.DeleteWidgetDataForInstance(db, instance.ID); err != nil {
+			return nil, err
+		}
+	}
+
 	return instance, nil
 }
 
