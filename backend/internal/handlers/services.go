@@ -11,7 +11,13 @@ import (
 )
 
 func (app *App) ListServices(c *gin.Context) {
-	services, err := usecases.ListServices(app.DB)
+	session, ok := middleware.GetSession(c)
+	if !ok {
+		c.Error(dashborderrors.ErrInternal)
+		return
+	}
+
+	services, err := usecases.ListServices(app.DB, session.UserID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -19,7 +25,7 @@ func (app *App) ListServices(c *gin.Context) {
 
 	presenters := make([]ServicePresenter, 0, len(services))
 	for _, s := range services {
-		presenters = append(presenters, NewServicePresenter(s))
+		presenters = append(presenters, NewServicePresenter(s.Service, s.Subscribed))
 	}
 
 	c.JSON(http.StatusOK, presenters)
@@ -34,7 +40,23 @@ func (app *App) Subscribe(c *gin.Context) {
 
 	serviceID := c.Param("id")
 
-	result, err := usecases.Subscribe(app.DB, session.UserID, serviceID)
+	var req struct {
+		Code string `json:"code"`
+	}
+	if c.Request.ContentLength > 0 {
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.Error(dashborderrors.ErrInvalidRequestBody)
+			return
+		}
+	}
+
+	github := usecases.GithubOAuthConfig{
+		ClientID:     app.GithubClientID,
+		ClientSecret: app.GithubClientSecret,
+		RedirectURI:  app.GithubRedirectURI,
+	}
+
+	result, err := usecases.Subscribe(app.DB, session.UserID, serviceID, req.Code, github)
 	if err != nil {
 		c.Error(err)
 		return

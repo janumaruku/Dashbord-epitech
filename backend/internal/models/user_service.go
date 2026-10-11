@@ -38,6 +38,18 @@ func UserServiceExists(db *gorm.DB, userID, serviceID string) (bool, error) {
 	return count > 0, nil
 }
 
+func ListSubscribedServiceIDs(db *gorm.DB, userID string) ([]string, error) {
+	var ids []string
+
+	if err := db.Model(&UserService{}).
+		Where("user_id = ?", userID).
+		Pluck("service_id", &ids).Error; err != nil {
+		return nil, err
+	}
+
+	return ids, nil
+}
+
 func CreateUserService(db *gorm.DB, us *UserService) error {
 	if err := db.Create(us).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
