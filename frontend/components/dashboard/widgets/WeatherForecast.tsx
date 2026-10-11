@@ -9,11 +9,11 @@ export default function WeatherForecast({ data }: { data: WeatherForecastData })
         <p className="text-xs text-zinc-500">{data.days.length} days</p>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto">
+      <div className="flex w-full gap-2">
         {data.days.map((day) => (
           <div
             key={day.date}
-            className="flex min-w-[64px] flex-1 flex-col items-center gap-1.5 rounded-lg bg-zinc-800/60 px-2 py-3"
+            className="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-lg bg-zinc-800/60 px-2 py-3"
           >
             <p className="text-[11px] font-semibold uppercase text-zinc-500">
               {dayLabel(day.date)}

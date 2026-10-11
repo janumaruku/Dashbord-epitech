@@ -15,12 +15,12 @@ export default function AppShell({ children, onAddWidget }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-black">
       <AppHeader onAddWidget={onAddWidget} onMenuToggle={() => setIsMobileNavOpen(true)} />
-      <div className="flex flex-1">
+      <div className="flex min-w-0 flex-1">
         <AppSidebar
           isMobileOpen={isMobileNavOpen}
           onMobileClose={() => setIsMobileNavOpen(false)}
         />
-        <main className="flex-1 px-8 py-8">{children}</main>
+        <main className="min-w-0 flex-1 px-8 py-8">{children}</main>
       </div>
     </div>
   );

@@ -198,7 +198,7 @@ export default function WidgetCard({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-auto px-5 py-4">
         <div className="flex min-h-full flex-col items-center justify-center">
           {renderContent()}
         </div>

@@ -116,12 +116,16 @@ export default function DashboardGrid({
     });
 
     return (
-      <div className="flex flex-col gap-4">
+      <div className="flex w-full min-w-0 flex-col gap-4">
         {sorted.map((instance) => {
           const widget = catalog.find((w) => w.id === instance.widget_id);
 
           return (
-            <div key={instance.id} style={{ height: stackedHeight(instance.position.h) }}>
+            <div
+              key={instance.id}
+              className="min-w-0"
+              style={{ height: stackedHeight(instance.position.h) }}
+            >
               <WidgetCard
                 instance={instance}
                 widget={widget}
