@@ -1,6 +1,9 @@
 import type { CatalogWidget, WidgetParam } from "@/hooks/useWidgetCatalog";
 import { rangeHintFor, titleForWidget } from "@/lib/widgets";
+import { getTimezoneSuggestions, isValidTimezone } from "@/lib/clock";
 import type { ConfigValue } from "./types";
+
+const TIMEZONE_OPTIONS = getTimezoneSuggestions();
 
 type StepConfigureProps = {
   serviceLabel: string;
@@ -31,6 +34,35 @@ function Field({ param, widget, config, onChange }: {
         <option value="celsius">Celsius (°C)</option>
         <option value="fahrenheit">Fahrenheit (°F)</option>
       </select>
+    );
+  }
+
+  if (param.name === "timezone") {
+    const stringValue = typeof value === "string" ? value : "";
+    const valid = stringValue === "" || isValidTimezone(stringValue);
+    return (
+      <div className="flex flex-col gap-1.5">
+        <input
+          type="text"
+          list="timezone-suggestions"
+          value={stringValue}
+          onChange={(event) => onChange(param.name, event.target.value)}
+          placeholder="Europe/Paris"
+          className={`w-full rounded-lg border bg-black px-3.5 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none ${
+            valid ? "border-zinc-800 focus:border-blue-500" : "border-rose-500"
+          }`}
+        />
+        <datalist id="timezone-suggestions">
+          {TIMEZONE_OPTIONS.map((tz) => (
+            <option key={tz} value={tz} />
+          ))}
+        </datalist>
+        {!valid && (
+          <p className="text-xs text-rose-400">
+            Not a recognized timezone. Try a name like Europe/Paris.
+          </p>
+        )}
+      </div>
     );
   }
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useTickingClock } from "@/hooks/useTickingClock";
-import { getDateLabel, getTimeParts } from "@/lib/clock";
+import { getDateLabel, getTimeParts, isValidTimezone } from "@/lib/clock";
+import InvalidTimezoneNotice from "@/components/dashboard/widgets/InvalidTimezoneNotice";
 
 function pad(value: number) {
   return value.toString().padStart(2, "0");
@@ -17,6 +18,11 @@ function Digit({ value }: { value: string }) {
 
 export default function DigitalClock({ timezone }: { timezone: string }) {
   const now = useTickingClock();
+
+  if (!isValidTimezone(timezone)) {
+    return <InvalidTimezoneNotice timezone={timezone} />;
+  }
+
   const { hours, minutes, seconds } = getTimeParts(timezone, now);
 
   return (

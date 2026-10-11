@@ -1,3 +1,23 @@
+export function isValidTimezone(timezone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: timezone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getTimezoneSuggestions(): string[] {
+  try {
+    const supportedValuesOf = (
+      Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }
+    ).supportedValuesOf;
+    return supportedValuesOf ? supportedValuesOf("timeZone") : [];
+  } catch {
+    return [];
+  }
+}
+
 export function getTimeParts(timezone: string, date: Date) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone,

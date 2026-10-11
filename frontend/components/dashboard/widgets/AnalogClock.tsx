@@ -1,10 +1,16 @@
 "use client";
 
 import { useTickingClock } from "@/hooks/useTickingClock";
-import { getDateLabel, getTimeParts } from "@/lib/clock";
+import { getDateLabel, getTimeParts, isValidTimezone } from "@/lib/clock";
+import InvalidTimezoneNotice from "@/components/dashboard/widgets/InvalidTimezoneNotice";
 
 export default function AnalogClock({ timezone }: { timezone: string }) {
   const now = useTickingClock();
+
+  if (!isValidTimezone(timezone)) {
+    return <InvalidTimezoneNotice timezone={timezone} />;
+  }
+
   const { hours, minutes, seconds } = getTimeParts(timezone, now);
 
   const hourAngle = ((hours % 12) + minutes / 60) * 30;

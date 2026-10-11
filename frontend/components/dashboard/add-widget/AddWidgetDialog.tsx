@@ -12,6 +12,7 @@ import {
   serviceDisplayName,
   type Position,
 } from "@/lib/widgets";
+import { isValidTimezone } from "@/lib/clock";
 import StepService from "./StepService";
 import StepWidgetType from "./StepWidgetType";
 import StepConfigure from "./StepConfigure";
@@ -93,6 +94,9 @@ export default function AddWidgetDialog({
         const value = state.config[param.name];
         if (param.type === "integer") {
           return typeof value === "number" && Number.isFinite(value);
+        }
+        if (param.name === "timezone") {
+          return typeof value === "string" && isValidTimezone(value);
         }
         return typeof value === "string" && value.trim().length > 0;
       });
