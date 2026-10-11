@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, LogOut, Plus } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Plus } from "lucide-react";
 import { clearStoredUser, clearTokens, getStoredUser, type User } from "@/lib/auth";
 
 function initialsOf(username: string) {
@@ -12,9 +12,10 @@ function initialsOf(username: string) {
 
 type AppHeaderProps = {
   onAddWidget?: () => void;
+  onMenuToggle: () => void;
 };
 
-export default function AppHeader({ onAddWidget }: AppHeaderProps) {
+export default function AppHeader({ onAddWidget, onMenuToggle }: AppHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -42,8 +43,17 @@ export default function AppHeader({ onAddWidget }: AppHeaderProps) {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-zinc-800 px-6">
-      <Link href="/dashboard" className="flex items-center gap-2.5">
+    <header className="flex h-[71px] items-center justify-between border-b border-zinc-800 px-6">
+      <button
+        type="button"
+        onClick={onMenuToggle}
+        aria-label="Open menu"
+        className="text-zinc-400 hover:text-white md:hidden"
+      >
+        <Menu size={22} />
+      </button>
+
+      <Link href="/dashboard" className="hidden items-center gap-2.5 md:flex">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500 text-sm font-bold text-white">
           e_
         </span>
@@ -58,7 +68,7 @@ export default function AppHeader({ onAddWidget }: AppHeaderProps) {
           disabled={!onAddWidget}
           onClick={onAddWidget}
           title={onAddWidget ? undefined : "Add a widget from the dashboard."}
-          className="flex items-center gap-1.5 rounded-lg bg-blue-500 px-3.5 py-2 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="hidden items-center gap-1.5 rounded-lg bg-blue-500 px-3.5 py-2 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50 md:flex"
         >
           <Plus size={15} />
           Add widget

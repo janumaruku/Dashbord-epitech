@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useState, type ReactNode } from "react";
 import AppHeader from "@/components/layout/AppHeader";
 import AppSidebar from "@/components/layout/AppSidebar";
 
@@ -8,12 +10,17 @@ type AppShellProps = {
 };
 
 export default function AppShell({ children, onAddWidget }: AppShellProps) {
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col bg-black">
-      <AppHeader onAddWidget={onAddWidget} />
+      <AppHeader onAddWidget={onAddWidget} onMenuToggle={() => setIsMobileNavOpen(true)} />
       <div className="flex flex-1">
-        <AppSidebar />
-        <main className="flex-1 px-10 py-8">{children}</main>
+        <AppSidebar
+          isMobileOpen={isMobileNavOpen}
+          onMobileClose={() => setIsMobileNavOpen(false)}
+        />
+        <main className="flex-1 px-8 py-8">{children}</main>
       </div>
     </div>
   );
