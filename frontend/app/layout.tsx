@@ -2,17 +2,10 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-import "react-grid-layout/css/styles.css";
-import "react-resizable/css/styles.css";
-
-import {
-  ServiceProvider,
-} from "@/components/services/serviceContext";
-
 export const metadata: Metadata = {
-  title: "My Dashboard",
+  title: "Epitech Dashboard",
   description:
-    "A customizable dashboard with weather, GitHub, and clock widgets.",
+    "A personal workspace for weather, repositories, and feeds.",
 };
 
 export default function RootLayout({
@@ -22,10 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-zinc-950 text-white">
-        <ServiceProvider>
-          {children}
-        </ServiceProvider>
+      <body className="min-h-screen bg-black text-white">
+        {children}
       </body>
     </html>
   );
