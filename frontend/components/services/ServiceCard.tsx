@@ -63,12 +63,16 @@ type ServiceCardProps = {
   service: Service;
   isSubscribing: boolean;
   onSubscribe: (serviceId: string) => void;
+  isUnsubscribing: boolean;
+  onUnsubscribe: (serviceId: string) => void;
 };
 
 export default function ServiceCard({
   service,
   isSubscribing,
   onSubscribe,
+  isUnsubscribing,
+  onUnsubscribe,
 }: ServiceCardProps) {
   const [githubError, setGithubError] = useState("");
   const meta = SERVICE_META[service.name] ?? FALLBACK_META;
@@ -130,11 +134,11 @@ export default function ServiceCard({
             </span>
             <button
               type="button"
-              disabled
-              title="Disconnecting isn't available yet."
-              className="text-[13px] font-semibold text-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => onUnsubscribe(service.id)}
+              disabled={isUnsubscribing}
+              className="text-[13px] font-semibold text-rose-400 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Disconnect
+              {isUnsubscribing ? "Disconnecting…" : "Disconnect"}
             </button>
           </>
         ) : isOAuth ? (

@@ -9,7 +9,15 @@ import ServiceCard from "@/components/services/ServiceCard";
 
 export default function ServicesPage() {
   const router = useRouter();
-  const { services, isLoading, error, subscribingId, subscribe } = useServices();
+  const {
+    services,
+    isLoading,
+    error,
+    subscribingId,
+    subscribe,
+    unsubscribingId,
+    unsubscribe,
+  } = useServices();
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -49,6 +57,8 @@ export default function ServicesPage() {
               service={service}
               isSubscribing={subscribingId === service.id}
               onSubscribe={subscribe}
+              isUnsubscribing={unsubscribingId === service.id}
+              onUnsubscribe={unsubscribe}
             />
           ))}
       </div>

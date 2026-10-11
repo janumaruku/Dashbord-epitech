@@ -18,6 +18,7 @@ export function useServices() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [subscribingId, setSubscribingId] = useState<string | null>(null);
+  const [unsubscribingId, setUnsubscribingId] = useState<string | null>(null);
 
   const fetchServices = useCallback(async () => {
     setIsLoading(true);
@@ -60,5 +61,30 @@ export function useServices() {
     }
   }, []);
 
-  return { services, isLoading, error, subscribingId, subscribe, refetch: fetchServices };
+  const unsubscribe = useCallback(async (serviceId: string) => {
+    setUnsubscribingId(serviceId);
+    try {
+      await api.delete(`/api/services/${serviceId}/subscribe`);
+      setServices((current) =>
+        current.map((service) =>
+          service.id === serviceId
+            ? { ...service, subscribed: false }
+            : service,
+        ),
+      );
+    } finally {
+      setUnsubscribingId(null);
+    }
+  }, []);
+
+  return {
+    services,
+    isLoading,
+    error,
+    subscribingId,
+    subscribe,
+    unsubscribingId,
+    unsubscribe,
+    refetch: fetchServices,
+  };
 }
