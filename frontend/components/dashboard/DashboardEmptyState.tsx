@@ -1,6 +1,10 @@
 import { LayoutDashboard, Plus } from "lucide-react";
 
-export default function DashboardEmptyState() {
+export default function DashboardEmptyState({
+  onAddWidget,
+}: {
+  onAddWidget: () => void;
+}) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-400">
@@ -15,9 +19,8 @@ export default function DashboardEmptyState() {
       </div>
       <button
         type="button"
-        disabled
-        title="The Add Widget flow isn't built yet."
-        className="flex items-center gap-1.5 rounded-lg bg-blue-500 px-3.5 py-2 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+        onClick={onAddWidget}
+        className="flex items-center gap-1.5 rounded-lg bg-blue-500 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-blue-400"
       >
         <Plus size={15} />
         Add widget

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/auth";
 import { useWidgetInstances } from "@/hooks/useWidgetInstances";
@@ -9,6 +9,7 @@ import AppShell from "@/components/layout/AppShell";
 import DashboardGrid from "@/components/dashboard/DashboardGrid";
 import DashboardEmptyState from "@/components/dashboard/DashboardEmptyState";
 import DashboardErrorState from "@/components/dashboard/DashboardErrorState";
+import AddWidgetDialog from "@/components/dashboard/add-widget/AddWidgetDialog";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   } = useWidgetInstances();
   const { widgets: catalog, isLoading: catalogLoading, error: catalogError } =
     useWidgetCatalog();
+  const [isAddWidgetOpen, setIsAddWidgetOpen] = useState(false);
 
   useEffect(() => {
     if (!getAccessToken()) {
@@ -39,7 +41,7 @@ export default function DashboardPage() {
   ).size;
 
   return (
-    <AppShell>
+    <AppShell onAddWidget={() => setIsAddWidgetOpen(true)}>
       <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-600">
         Your workspace
       </p>
@@ -59,7 +61,9 @@ export default function DashboardPage() {
 
         {!isLoading && error && <DashboardErrorState onRetry={refetch} />}
 
-        {!isLoading && !error && instances.length === 0 && <DashboardEmptyState />}
+        {!isLoading && !error && instances.length === 0 && (
+          <DashboardEmptyState onAddWidget={() => setIsAddWidgetOpen(true)} />
+        )}
 
         {!isLoading && !error && instances.length > 0 && (
           <>
@@ -76,6 +80,14 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {isAddWidgetOpen && (
+        <AddWidgetDialog
+          existingPositions={instances.map((instance) => instance.position)}
+          onClose={() => setIsAddWidgetOpen(false)}
+          onCreated={refetch}
+        />
+      )}
     </AppShell>
   );
 }

@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 import { Clock, Cloud, Rss } from "lucide-react";
 import { FaGithub } from "react-icons/fa";
 
-export const GRID_COLUMNS = 6;
+export const GRID_COLUMNS = 12;
 export const ROW_HEIGHT = 88;
 export const GRID_GAP = 16;
 export const MIN_WIDGET_W = 2;
@@ -11,16 +11,16 @@ export const MIN_WIDGET_H = 2;
 export type Position = { x: number; y: number; w: number; h: number };
 
 export const DEFAULT_WIDGET_SIZE: Record<string, { w: number; h: number }> = {
-  city_temperature: { w: 2, h: 4 },
-  city_forecast: { w: 4, h: 4 },
-  current_conditions: { w: 2, h: 4 },
-  user_profile: { w: 2, h: 4 },
-  recent_repos: { w: 3, h: 4 },
-  recent_commits: { w: 3, h: 4 },
-  feed_summary: { w: 2, h: 4 },
-  feed_latest: { w: 6, h: 4 },
-  analog_clock: { w: 3, h: 4 },
-  digital_clock: { w: 3, h: 4 },
+  city_temperature: { w: 4, h: 4 },
+  city_forecast: { w: 8, h: 4 },
+  current_conditions: { w: 4, h: 4 },
+  user_profile: { w: 4, h: 4 },
+  recent_repos: { w: 6, h: 4 },
+  recent_commits: { w: 6, h: 4 },
+  feed_summary: { w: 4, h: 4 },
+  feed_latest: { w: 12, h: 4 },
+  analog_clock: { w: 6, h: 4 },
+  digital_clock: { w: 6, h: 4 },
 };
 
 export function defaultSizeFor(widgetName: string): { w: number; h: number } {
@@ -85,4 +85,56 @@ export function titleForWidget(name: string): string {
 
 export function isClockWidget(name: string | undefined): boolean {
   return name === "analog_clock" || name === "digital_clock";
+}
+
+function overlaps(a: Position, b: Position): boolean {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+export function findFirstFreeArea(
+  occupied: Position[],
+  w: number,
+  h: number,
+): { x: number; y: number } {
+  for (let y = 0; y < 500; y += 1) {
+    for (let x = 0; x <= GRID_COLUMNS - w; x += 1) {
+      const candidate = { x, y, w, h };
+      if (!occupied.some((position) => overlaps(candidate, position))) {
+        return { x, y };
+      }
+    }
+  }
+  return { x: 0, y: occupied.length * h };
+}
+
+export function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds} sec`;
+  if (seconds < 3600) {
+    const minutes = Math.round(seconds / 60);
+    return `${minutes} min`;
+  }
+  const hours = Math.round((seconds / 3600) * 10) / 10;
+  return `${hours} hr`;
+}
+
+export const PARAM_RANGE_HINTS: Record<string, { min: number; max: number }> = {
+  "city_forecast.days": { min: 1, max: 5 },
+  "recent_repos.limit": { min: 1, max: 10 },
+  "recent_commits.limit": { min: 1, max: 20 },
+  "feed_latest.limit": { min: 1, max: 20 },
+};
+
+export function rangeHintFor(widgetName: string, paramName: string) {
+  return PARAM_RANGE_HINTS[`${widgetName}.${paramName}`] ?? { min: 1, max: 100 };
+}
+
+const SERVICE_DISPLAY_NAME: Record<string, string> = {
+  weather: "Weather",
+  github: "GitHub",
+  rss: "RSS feeds",
+  clock: "Clock",
+};
+
+export function serviceDisplayName(name: string): string {
+  return SERVICE_DISPLAY_NAME[name] ?? name;
 }

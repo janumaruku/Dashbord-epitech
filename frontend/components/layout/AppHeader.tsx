@@ -10,7 +10,11 @@ function initialsOf(username: string) {
   return username.slice(0, 2).toUpperCase();
 }
 
-export default function AppHeader() {
+type AppHeaderProps = {
+  onAddWidget?: () => void;
+};
+
+export default function AppHeader({ onAddWidget }: AppHeaderProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,8 +55,9 @@ export default function AppHeader() {
       <div className="flex items-center gap-4">
         <button
           type="button"
-          disabled
-          title="Add a widget from the dashboard."
+          disabled={!onAddWidget}
+          onClick={onAddWidget}
+          title={onAddWidget ? undefined : "Add a widget from the dashboard."}
           className="flex items-center gap-1.5 rounded-lg bg-blue-500 px-3.5 py-2 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus size={15} />
