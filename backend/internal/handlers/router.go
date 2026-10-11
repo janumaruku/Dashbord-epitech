@@ -20,5 +20,14 @@ func RegisterRoutes(r *gin.Engine, app *App) {
 		apiGroup := r.Group("/api", middleware.Auth())
 		apiGroup.GET("/services", app.ListServices)
 		apiGroup.POST("/services/:id/subscribe", app.Subscribe)
+		apiGroup.GET("/widgets", app.ListWidgetCatalog)
+	}
+
+	{
+		dashboardGroup := r.Group("/dashboard", middleware.Auth())
+		dashboardGroup.POST("/widgets", app.CreateWidgetInstance)
+		dashboardGroup.GET("/widgets", app.ListWidgetInstances)
+		dashboardGroup.PUT("/widgets/:id", app.UpdateWidgetInstance)
+		dashboardGroup.DELETE("/widgets/:id", app.DeleteWidgetInstance)
 	}
 }

@@ -65,8 +65,17 @@ Every `code` the server can return:
 | `INVALID_CREDENTIALS` | 401 | Invalid email or password | usecases |
 | `INVALID_REFRESH_TOKEN` | 401 | Invalid or expired refresh token | usecases |
 | `OAUTH_REQUIRED` | 400 | This service requires OAuth | usecases |
+| `GITHUB_CODE_REQUIRED` | 400 | A GitHub authorization code is required to connect this service | usecases |
+| `GITHUB_EXCHANGE_FAILED` | 502 | Could not complete GitHub authorization | usecases |
 | `ALREADY_SUBSCRIBED` | 409 | Already subscribed to this service | usecases |
 | `SERVICE_NOT_FOUND` | 404 | Service not found | models |
+| `WIDGET_NOT_FOUND` | 404 | Widget not found | models |
+| `WIDGET_INSTANCE_NOT_FOUND` | 404 | Widget instance not found | models |
+| `WIDGET_INSTANCE_FORBIDDEN` | 403 | This widget instance belongs to another user | usecases |
+| `NOT_SUBSCRIBED` | 400 | Subscribe to this widget's service first | usecases |
+| `INVALID_WIDGET_CONFIG` | 400 | Configuration does not match this widget's parameters | usecases |
+| `INVALID_REFRESH_RATE` | 400 | Refresh rate must be between 5 and 3600 seconds | usecases |
+| `INVALID_POSITION` | 400 | Position must have x >= 0, y >= 0, w > 0, h > 0 | usecases |
 | `DUPLICATE_ENTRY` | 409 | This value already exists | models (a unique-constraint violation the database itself raised) |
 | `MISSING_AUTH_HEADER` | 401 | Missing or invalid authorization header | middleware |
 | `INVALID_TOKEN` | 401 | Invalid or expired token | middleware |
@@ -84,9 +93,11 @@ Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNo
 | 201 | Resource created (account registration, subscription) |
 | 400 | Malformed body or failed input validation |
 | 401 | Missing, invalid, or expired credentials |
+| 403 | The resource exists but doesn't belong to the caller |
 | 404 | Resource with the given ID does not exist |
 | 409 | Conflict with existing data |
 | 500 | Internal or database failure |
+| 502 | An upstream service (e.g. GitHub's OAuth token endpoint) failed |
 
 ---
 
@@ -321,7 +332,7 @@ The list is empty until the services are seeded (ticket T006).
 
 ### 2.7 POST `/api/services/:id/subscribe`
 
-Subscribes the authenticated user to a service that does not require OAuth (Weather and RSS). Implements UC4 for the non-OAuth path.
+Subscribes the authenticated user to a service. For a service with `requires_auth = false` (Weather, RSS, Clock), no body is needed. For GitHub (`requires_auth = true`, `oauth_provider = "github"`), the request must include the authorization `code` obtained from GitHub's OAuth redirect — the server exchanges it for an access token server-side. Implements UC4, both the non-OAuth and OAuth paths.
 
 **Auth:** `Bearer` access token required. The user is taken from the token's `sub` claim. The request must not include a user identifier.
 
@@ -331,7 +342,13 @@ Subscribes the authenticated user to a service that does not require OAuth (Weat
 |---|---|---|
 | `id` | string (UUID) | ID of the service, from `GET /api/services` |
 
-**Request:** no body.
+**Request:** no body for a non-OAuth service. For GitHub:
+
+```json
+{
+  "code": "the-code-github-redirected-back-with"
+}
+```
 
 ```
 POST /api/services/6f2c1e2a-8b1d-4c3e-9f7a-2d5b6c7e8f90/subscribe
@@ -354,15 +371,177 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 |---|---|---|
 | 401 | `MISSING_AUTH_HEADER` | As §2.6 |
 | 401 | `INVALID_TOKEN` | As §2.6 |
-| 400 | `OAUTH_REQUIRED` | The service has `requires_auth = true`. Use the OAuth flow (ticket T016). |
+| 400 | `OAUTH_REQUIRED` | The service has `requires_auth = true` but its `oauth_provider` isn't one the server knows how to complete |
+| 400 | `GITHUB_CODE_REQUIRED` | The service is GitHub and no `code` was sent |
+| 502 | `GITHUB_EXCHANGE_FAILED` | The code-for-token exchange with GitHub failed (bad code, GitHub down, or `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` not configured) |
 | 404 | `SERVICE_NOT_FOUND` | No service with this ID |
 | 409 | `ALREADY_SUBSCRIBED` | The user already has a subscription to this service (RG4) |
 | 409 | `DUPLICATE_ENTRY` | Race between the exists-check and the insert — generic, same reasoning as §2.3 |
 | 500 | `INTERNAL_SERVER_ERROR` | Database failure |
 
 **Notes:**
-- A subscription has no credentials. The `user_services` row has `credentials`, `oauth_token` and `oauth_refresh_token` set to `NULL`.
+- A non-OAuth subscription has no credentials. The `user_services` row has `credentials`, `oauth_token` and `oauth_refresh_token` set to `NULL`.
+- A GitHub subscription stores the exchanged access token in `oauth_token`, unencrypted for now — AES-256-GCM encryption at rest (doc.md §9) is not yet implemented.
 - The `UNIQUE (user_id, service_id)` constraint is the last line of defence against the exact same race `ALREADY_SUBSCRIBED` is meant to catch — it's what produces `DUPLICATE_ENTRY` instead, in the narrow window between the check and the insert.
+
+---
+
+### 2.8 GET `/api/widgets`
+
+Lists every widget type in the catalog, across all services, with its configuration parameters. Implements T019.
+
+**Auth:** `Bearer` access token required.
+
+**Request:** no body, no query parameters.
+
+**Response `200`:** an array, possibly empty.
+
+```json
+[
+  {
+    "id": "0a85a246-e7b1-4f2c-aae1-ef7d9634e30a",
+    "service_id": "aa96a4da-c375-11f1-886d-dc5360d4cd0d",
+    "name": "city_temperature",
+    "description": "Temperature, condition, and humidity for a city",
+    "params": [
+      { "name": "city", "type": "string", "description": "City name" },
+      { "name": "units", "type": "string", "description": "celsius or fahrenheit" }
+    ]
+  }
+]
+```
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` | As §2.6 |
+| 401 | `INVALID_TOKEN` | As §2.6 |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
+### 2.9 POST `/dashboard/widgets`
+
+Creates a widget instance on the authenticated user's dashboard. Implements UC5 / T020.
+
+**Auth:** `Bearer` access token required.
+
+**Request:**
+
+```json
+{
+  "widget_id": "0a85a246-e7b1-4f2c-aae1-ef7d9634e30a",
+  "config": { "city": "Paris", "units": "celsius" },
+  "refresh_rate": 300,
+  "position": { "x": 0, "y": 0, "w": 2, "h": 2 }
+}
+```
+
+**Response `201`:**
+
+```json
+{
+  "id": "59547be4-76de-4bfd-90af-e1acc7dbb5fe",
+  "widget_id": "0a85a246-e7b1-4f2c-aae1-ef7d9634e30a",
+  "config": { "city": "Paris", "units": "celsius" },
+  "refresh_rate": 300,
+  "position": { "x": 0, "y": 0, "w": 2, "h": 2 },
+  "created_at": "2026-10-11T08:16:10Z",
+  "updated_at": "2026-10-11T08:16:10Z",
+  "data": null,
+  "fetched_at": null,
+  "cached": false
+}
+```
+
+`data`/`fetched_at`/`cached` are always null/false on creation — no external data has been fetched yet.
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` / `INVALID_TOKEN` | As §2.6 |
+| 400 | `INVALID_REQUEST_BODY` | Malformed JSON |
+| 404 | `WIDGET_NOT_FOUND` | No widget with this ID |
+| 400 | `NOT_SUBSCRIBED` | User isn't subscribed to the widget's service (RG6) |
+| 400 | `INVALID_WIDGET_CONFIG` | `config` has a missing, extra, or wrong-typed key relative to the widget's params (RG7) |
+| 400 | `INVALID_REFRESH_RATE` | Not in `[5, 3600]` (RG8) |
+| 400 | `INVALID_POSITION` | `x < 0`, `y < 0`, `w <= 0`, or `h <= 0` (RG9) |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
+### 2.10 GET `/dashboard/widgets`
+
+Lists the authenticated user's widget instances, each with its latest cached data if any exists. Implements UC8 / T021.
+
+**Auth:** `Bearer` access token required.
+
+**Response `200`:** an array, possibly empty, of the same shape as §2.9's response. `cached` is `true` only when a `widget_data` row exists for that instance; there is no live external-API fetch yet (that lands with T028–T031) — until then, an instance with no cached data yet returns `data: null, cached: false`.
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` / `INVALID_TOKEN` | As §2.6 |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
+### 2.11 PUT `/dashboard/widgets/:id`
+
+Updates a widget instance's `config`, `refresh_rate`, and/or `position`. All three are optional; only the fields present in the body are changed. Implements UC6/UC7 (drag-and-drop) / T022.
+
+**Auth:** `Bearer` access token required. The instance must belong to the caller.
+
+**Path parameter:**
+
+| Name | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | ID of the widget instance |
+
+**Request:** any subset of:
+
+```json
+{
+  "config": { "city": "London", "units": "celsius" },
+  "refresh_rate": 600,
+  "position": { "x": 2, "y": 0, "w": 2, "h": 2 }
+}
+```
+
+**Response `200`:** the updated instance, same shape as §2.9.
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` / `INVALID_TOKEN` | As §2.6 |
+| 400 | `INVALID_REQUEST_BODY` | Malformed JSON |
+| 404 | `WIDGET_INSTANCE_NOT_FOUND` | No instance with this ID |
+| 403 | `WIDGET_INSTANCE_FORBIDDEN` | The instance belongs to another user (RG10) |
+| 400 | `INVALID_WIDGET_CONFIG` / `INVALID_REFRESH_RATE` / `INVALID_POSITION` | Same validation as §2.9, applied to whichever fields were sent |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
+
+---
+
+### 2.12 DELETE `/dashboard/widgets/:id`
+
+Deletes a widget instance immediately — no soft-delete. Implements UC7's delete path / T023.
+
+**Auth:** `Bearer` access token required. The instance must belong to the caller.
+
+**Response `200`:** empty body.
+
+**Errors:**
+
+| Status | `code` | Cause |
+|---|---|---|
+| 401 | `MISSING_AUTH_HEADER` / `INVALID_TOKEN` | As §2.6 |
+| 404 | `WIDGET_INSTANCE_NOT_FOUND` | No instance with this ID |
+| 403 | `WIDGET_INSTANCE_FORBIDDEN` | The instance belongs to another user (RG10) |
+| 500 | `INTERNAL_SERVER_ERROR` | Database failure |
 
 ---
 
@@ -373,3 +552,5 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 | Initial specification: `/about.json`, auth endpoints, `/api/services` | T008, T009, T010, T014 |
 | `POST /api/services/:id/subscribe` implemented, replacing the earlier `/api/user-services/:id/subscribe` path | T015 |
 | Error shape changed from a grouped `{"errors": [{"code", "messages": [...]}]}` envelope to a single flat `{"code", "message"}` object, and error codes became specific per failure instead of three generic categories | — |
+| `POST /api/services/:id/subscribe` extended to accept `{"code"}` and complete the GitHub OAuth token exchange | T016 |
+| Widget catalog and dashboard widget instance CRUD added: `GET /api/widgets`, `POST`/`GET /dashboard/widgets`, `PUT`/`DELETE /dashboard/widgets/:id` | T019, T020, T021, T022, T023 |
