@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type PointerEvent } from "react";
-import { GripVertical, MoreHorizontal, Trash2 } from "lucide-react";
+import { GripVertical, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
 import type { WidgetInstance } from "@/hooks/useWidgetInstances";
 import type { CatalogWidget } from "@/hooks/useWidgetCatalog";
 import { accentForWidget, isClockWidget, titleForWidget } from "@/lib/widgets";
@@ -13,6 +13,7 @@ type WidgetCardProps = {
   instance: WidgetInstance;
   widget?: CatalogWidget;
   onDragHandlePointerDown: (event: PointerEvent) => void;
+  onResizeHandlePointerDown: (event: PointerEvent) => void;
   onDelete: () => void;
 };
 
@@ -43,6 +44,7 @@ export default function WidgetCard({
   instance,
   widget,
   onDragHandlePointerDown,
+  onResizeHandlePointerDown,
   onDelete,
 }: WidgetCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -115,9 +117,19 @@ export default function WidgetCard({
         {!widget && <NoDataPlaceholder message="Loading…" />}
       </div>
 
-      <p className="mt-3 text-[11px] text-zinc-600">
-        {isClock ? "Last updated: just now" : formatLastUpdated(instance.fetched_at)}
-      </p>
+      <div className="mt-3 flex items-center justify-between">
+        <p className="text-[11px] text-zinc-600">
+          {isClock ? "Last updated: just now" : formatLastUpdated(instance.fetched_at)}
+        </p>
+        <button
+          type="button"
+          onPointerDown={onResizeHandlePointerDown}
+          className="cursor-nwse-resize touch-none text-zinc-600 hover:text-zinc-400"
+          aria-label="Drag to resize"
+        >
+          <Maximize2 size={14} />
+        </button>
+      </div>
 
       {confirmDelete && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 rounded-2xl bg-zinc-900/95 p-5 text-center">

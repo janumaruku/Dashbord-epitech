@@ -130,11 +130,8 @@ export default function DashboardGrid({
               instance={instance}
               widget={widget}
               onDragHandlePointerDown={(event) => beginDrag(instance, "move", event)}
+              onResizeHandlePointerDown={(event) => beginDrag(instance, "resize", event)}
               onDelete={() => onDelete(instance.id)}
-            />
-            <div
-              onPointerDown={(event) => beginDrag(instance, "resize", event)}
-              className="absolute bottom-1.5 right-1.5 h-3 w-3 cursor-nwse-resize rounded-sm border-b-2 border-r-2 border-zinc-600 hover:border-zinc-400"
             />
           </div>
         );
