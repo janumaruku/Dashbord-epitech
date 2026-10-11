@@ -38,6 +38,7 @@ Authorization: Bearer <token>
 - The access token is a JWT signed with HS256. Its `sub` claim is the user ID.
 - Its lifetime is `TOKEN_EXPIRY` seconds (3600 in the example configuration).
 - The refresh token is an opaque 64-character hexadecimal string. It is valid for 7 days and is rotated on every use: each `POST /auth/refresh` returns a new one, and the previous one stops working immediately.
+- Every `/api/*` and `/dashboard/*` route shares a single rate limit of 100 requests / minute / user (keyed on the authenticated user ID, after the token is validated). Exceeding it returns `RATE_LIMITED` (429) on the request that crosses the threshold.
 
 ### 1.5 Error responses
 
@@ -80,6 +81,7 @@ Every `code` the server can return:
 | `DUPLICATE_ENTRY` | 409 | This value already exists | models (a unique-constraint violation the database itself raised) |
 | `MISSING_AUTH_HEADER` | 401 | Missing or invalid authorization header | middleware |
 | `INVALID_TOKEN` | 401 | Invalid or expired token | middleware |
+| `RATE_LIMITED` | 429 | Too many requests, please try again later | middleware |
 | `INTERNAL_SERVER_ERROR` | 500 | Internal server error | generic fallback — anything that isn't one of the codes above |
 
 Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNotFound`) but are never returned to a client directly — `POST /auth/login` and `POST /auth/refresh` always substitute `INVALID_CREDENTIALS`/`INVALID_REFRESH_TOKEN` instead, so a client can never tell "no such account" apart from "wrong password," or "token doesn't exist" apart from "token expired."
@@ -97,6 +99,7 @@ Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNo
 | 403 | The resource exists but doesn't belong to the caller |
 | 404 | Resource with the given ID does not exist |
 | 409 | Conflict with existing data |
+| 429 | Caller exceeded a rate limit |
 | 500 | Internal or database failure |
 | 502 | An upstream service (e.g. GitHub's OAuth token endpoint) failed |
 
@@ -209,7 +212,10 @@ The password and its hash are never returned.
 | 409 | `USERNAME_TAKEN` | Username exists |
 | 409 | `EMAIL_TAKEN` | Email exists |
 | 409 | `DUPLICATE_ENTRY` | Race between the exists-checks and the insert — generic, since the database can't say which column collided |
+| 429 | `RATE_LIMITED` | More than 3 registrations from this IP within the last hour |
 | 500 | `INTERNAL_SERVER_ERROR` | Any other failure (database, password hashing, token signing) |
+
+**Rate limit:** 3 registrations / hour / IP, enforced before the handler runs (`doc.md` §9).
 
 ---
 
@@ -253,9 +259,10 @@ Verifies credentials and returns tokens. Implements UC2.
 |---|---|---|
 | 400 | `INVALID_REQUEST_BODY` | Malformed body |
 | 401 | `INVALID_CREDENTIALS` | Unknown email **or** wrong password. The two cases are deliberately indistinguishable. |
+| 429 | `RATE_LIMITED` | More than 5 attempts from this IP within the last 15 minutes |
 | 500 | `INTERNAL_SERVER_ERROR` | Any other failure |
 
-**Not implemented:** rate limiting (5 failed attempts per 15 minutes per IP, `doc.md` UC2). Tracked under ticket T039.
+**Rate limit:** 5 attempts / 15 min / IP, enforced before the handler runs — the 6th attempt never reaches the database (`doc.md` §9, UC2).
 
 ---
 
