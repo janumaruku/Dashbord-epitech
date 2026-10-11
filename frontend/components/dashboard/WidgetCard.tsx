@@ -55,8 +55,8 @@ export default function WidgetCard({
   const isClock = isClockWidget(widget?.name);
 
   return (
-    <div className="relative flex h-full flex-col rounded-2xl bg-zinc-900 p-5">
-      <div className="flex items-start justify-between">
+    <div className="relative flex h-full flex-col rounded-2xl bg-zinc-900">
+      <div className="flex items-start justify-between border-b border-zinc-800 px-5 py-4">
         <div className="flex items-start gap-2.5">
           <button
             type="button"
@@ -104,7 +104,7 @@ export default function WidgetCard({
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center px-5 py-4">
         {widget?.name === "analog_clock" && (
           <AnalogClock timezone={getConfigString(instance.config, "timezone", "UTC")} />
         )}
@@ -117,7 +117,7 @@ export default function WidgetCard({
         {!widget && <NoDataPlaceholder message="Loading…" />}
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="flex items-center justify-between border-t border-zinc-800 px-5 py-3">
         <p className="text-[11px] text-zinc-600">
           {isClock ? "Last updated: just now" : formatLastUpdated(instance.fetched_at)}
         </p>
