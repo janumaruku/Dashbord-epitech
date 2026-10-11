@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState, type PointerEvent } from "react";
-import { AlertTriangle, GripVertical, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  GripVertical,
+  Maximize2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import type { WidgetInstance } from "@/hooks/useWidgetInstances";
 import type { CatalogWidget } from "@/hooks/useWidgetCatalog";
 import { accentForWidget, isClockWidget, titleForWidget } from "@/lib/widgets";
@@ -24,6 +31,7 @@ import GithubCommits from "@/components/dashboard/widgets/GithubCommits";
 import RssLatest from "@/components/dashboard/widgets/RssLatest";
 import RssSummary from "@/components/dashboard/widgets/RssSummary";
 import NoDataPlaceholder from "@/components/dashboard/NoDataPlaceholder";
+import EditWidgetDialog from "@/components/dashboard/EditWidgetDialog";
 
 type WidgetCardProps = {
   instance: WidgetInstance;
@@ -67,6 +75,7 @@ export default function WidgetCard({
 }: WidgetCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const accent = accentForWidget(widget?.name ?? "");
   const title = widget ? titleForWidget(widget.name) : "Widget";
@@ -160,6 +169,19 @@ export default function WidgetCard({
 
           {menuOpen && (
             <div className="absolute right-0 top-full z-20 mt-1 w-40 rounded-lg border border-zinc-800 bg-zinc-900 p-1 shadow-xl">
+              {widget && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setEditOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-[13px] text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                >
+                  <Pencil size={14} />
+                  Edit
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -224,6 +246,16 @@ export default function WidgetCard({
             </button>
           </div>
         </div>
+      )}
+
+      {editOpen && widget && (
+        <EditWidgetDialog
+          instance={instance}
+          widget={widget}
+          serviceName={accent.label}
+          onClose={() => setEditOpen(false)}
+          onSaved={onRefetchDue}
+        />
       )}
     </div>
   );

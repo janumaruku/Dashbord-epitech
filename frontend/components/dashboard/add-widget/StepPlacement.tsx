@@ -1,4 +1,5 @@
-import { formatDuration, GRID_COLUMNS, type Position } from "@/lib/widgets";
+import { GRID_COLUMNS, type Position } from "@/lib/widgets";
+import RefreshRateField from "@/components/dashboard/RefreshRateField";
 
 type StepPlacementProps = {
   refreshRate: number;
@@ -26,26 +27,7 @@ export default function StepPlacement({
         </p>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className="text-sm text-zinc-300">Refresh rate · required</label>
-        <p className="text-sm font-semibold text-white">
-          {refreshRate} seconds · {formatDuration(refreshRate)}
-        </p>
-        <input
-          type="range"
-          min={5}
-          max={3600}
-          step={5}
-          value={refreshRate}
-          onChange={(event) => onRefreshRateChange(Number(event.target.value))}
-          className="w-full accent-blue-500"
-        />
-        <div className="flex justify-between text-xs text-zinc-600">
-          <span>5 seconds</span>
-          <span>3600 seconds</span>
-        </div>
-        <p className="text-xs text-zinc-600">Adjust in 5-second steps.</p>
-      </div>
+      <RefreshRateField value={refreshRate} onChange={onRefreshRateChange} />
 
       <div className="flex flex-col gap-2 border-t border-zinc-800 pt-5">
         <p className="text-sm font-semibold text-white">Initial position</p>
