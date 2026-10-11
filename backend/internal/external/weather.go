@@ -60,6 +60,7 @@ type owmWeatherResponse struct {
 	} `json:"main"`
 	Wind struct {
 		Speed float64 `json:"speed"`
+		Deg   float64 `json:"deg"`
 	} `json:"wind"`
 	Name string `json:"name"`
 }
@@ -135,17 +136,47 @@ func fetchCurrentConditions(apiKey, city, owmUnits, unitsLabel string) (models.J
 	}
 
 	result := models.JSONMap{
-		"city":       data.Name,
-		"wind_speed": roundTo1(windSpeed),
-		"wind_units": windUnits,
-		"pressure":   data.Main.Pressure,
+		"city":           data.Name,
+		"wind_speed":     roundTo1(windSpeed),
+		"wind_units":     windUnits,
+		"wind_direction": compassDirection(data.Wind.Deg),
+		"pressure":       data.Main.Pressure,
 	}
 
 	if uv, err := fetchUVIndex(apiKey, data.Coord.Lat, data.Coord.Lon); err == nil {
-		result["uv_index"] = uv
+		result["uv_index"] = roundTo1(uv)
+		result["uv_category"] = uvCategory(uv)
 	}
 
 	return result, nil
+}
+
+var compassPoints = []string{
+	"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+	"S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW",
+}
+
+func compassDirection(deg float64) string {
+	idx := int(math.Round(deg/22.5)) % len(compassPoints)
+	if idx < 0 {
+		idx += len(compassPoints)
+	}
+	return compassPoints[idx]
+}
+
+func uvCategory(uv float64) string {
+	switch {
+	case uv < 3:
+		return "Low"
+	case uv < 6:
+		return "Moderate"
+	case uv < 8:
+		return "High"
+	case uv < 11:
+		return "Very High"
+	default:
+		return "Extreme"
+	}
 }
 
 func fetchUVIndex(apiKey string, lat, lon float64) (float64, error) {
