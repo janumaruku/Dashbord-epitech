@@ -17,6 +17,7 @@ type DashboardGridProps = {
   catalog: CatalogWidget[];
   onPositionChange: (id: string, position: Position) => void;
   onDelete: (id: string) => void;
+  onRefetchDue: () => void;
 };
 
 type DragState = {
@@ -34,6 +35,7 @@ export default function DashboardGrid({
   catalog,
   onPositionChange,
   onDelete,
+  onRefetchDue,
 }: DashboardGridProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -132,6 +134,7 @@ export default function DashboardGrid({
               onDragHandlePointerDown={(event) => beginDrag(instance, "move", event)}
               onResizeHandlePointerDown={(event) => beginDrag(instance, "resize", event)}
               onDelete={() => onDelete(instance.id)}
+              onRefetchDue={onRefetchDue}
             />
           </div>
         );

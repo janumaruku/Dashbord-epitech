@@ -72,6 +72,7 @@ export default function DashboardPage() {
               catalog={catalog}
               onPositionChange={updatePosition}
               onDelete={deleteInstance}
+              onRefetchDue={refetch}
             />
             <p className="mt-6 text-center text-xs text-zinc-600">
               Arrange your widgets using their drag handles. Use the options menu to edit

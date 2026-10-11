@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type PointerEvent } from "react";
+import { useEffect, useState, type PointerEvent } from "react";
 import { AlertTriangle, GripVertical, Maximize2, MoreHorizontal, Trash2 } from "lucide-react";
 import type { WidgetInstance } from "@/hooks/useWidgetInstances";
 import type { CatalogWidget } from "@/hooks/useWidgetCatalog";
@@ -31,6 +31,7 @@ type WidgetCardProps = {
   onDragHandlePointerDown: (event: PointerEvent) => void;
   onResizeHandlePointerDown: (event: PointerEvent) => void;
   onDelete: () => void;
+  onRefetchDue: () => void;
 };
 
 function getConfigString(
@@ -62,6 +63,7 @@ export default function WidgetCard({
   onDragHandlePointerDown,
   onResizeHandlePointerDown,
   onDelete,
+  onRefetchDue,
 }: WidgetCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -70,6 +72,14 @@ export default function WidgetCard({
   const title = widget ? titleForWidget(widget.name) : "Widget";
   const isClock = isClockWidget(widget?.name);
   const data = asRecord(instance.data);
+  const refreshRateMs = instance.refresh_rate * 1000;
+
+  useEffect(() => {
+    if (isClock) return;
+
+    const id = setInterval(onRefetchDue, refreshRateMs);
+    return () => clearInterval(id);
+  }, [isClock, refreshRateMs, onRefetchDue]);
 
   function renderContent() {
     if (widget?.name === "analog_clock") {
