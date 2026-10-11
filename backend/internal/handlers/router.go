@@ -7,7 +7,7 @@ import (
 )
 
 func RegisterRoutes(r *gin.Engine, app *App) {
-	r.GET("/about.json", AboutJSON)
+	r.GET("/about.json", app.AboutJSON)
 
 	{
 		authGroup := r.Group("/auth")

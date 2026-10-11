@@ -108,7 +108,7 @@ Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNo
 
 | Method | Path | Auth | Status |
 |---|---|---|---|
-| GET | `/about.json` | None | Implemented (placeholder body) |
+| GET | `/about.json` | None | Implemented |
 | POST | `/auth/register` | None | Implemented |
 | POST | `/auth/login` | None | Implemented |
 | POST | `/auth/refresh` | None | Implemented |
@@ -119,17 +119,44 @@ Two codes exist in the code (`models.ErrUserNotFound`, `models.ErrRefreshTokenNo
 
 ### 2.2 GET `/about.json`
 
-Service metadata for the Epitech checker.
+Service metadata for the Epitech checker, per the exact schema given in the project subject.
 
 **Auth:** none.
 
 **Response `200`:**
 
 ```json
-{ "ans": "OK" }
+{
+  "client": {
+    "host": "::1"
+  },
+  "server": {
+    "current_time": 1791733244,
+    "services": [
+      {
+        "name": "weather",
+        "widgets": [
+          {
+            "name": "city_temperature",
+            "description": "Current temperature, condition, and humidity for a city.",
+            "params": [
+              { "name": "city", "type": "string" },
+              { "name": "units", "type": "string" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
-**Status:** placeholder. It must be replaced with the full schema (services and widgets metadata) under ticket T037 before the project is submitted.
+| Field | Notes |
+|---|---|
+| `client.host` | The connecting client's IP, via Gin's `ClientIP()` |
+| `server.current_time` | Unix epoch seconds, at request time |
+| `server.services[].name` | Every seeded service, not just ones the caller is subscribed to — this endpoint has no auth and no per-user state |
+| `server.services[].widgets[].params[].type` | Always `string` or `integer` — the only two types the subject's schema allows. The widget catalog's own internal `type` column (`internal/models/widget.go`) could technically hold other values, but nothing in this codebase writes anything else into it |
 
 ---
 
